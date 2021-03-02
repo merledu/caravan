@@ -2,6 +2,11 @@
 test_run_dir/*
 ### XilinxISE template
 # intermediate build files
+.metals/
+.bloop/
+project/metals.sbt
+project/project/
+.ammonite/
 *.bgn
 *.bit
 *.bld
