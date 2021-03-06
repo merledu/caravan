@@ -30,8 +30,6 @@ case class WishboneBus(config: WishboneConfig) extends Bundle {
   val dat_mosi     = Output(UInt(config.dataWidth.W))
   val dat_miso     = Input(UInt(config.dataWidth.W))
   val err_i        = Input(Bool())
-  val lock_o       = Output(Bool())
-  val rty_i        = Input(Bool())
   val sel_o        = Output(UInt((config.dataWidth/config.granularity).W))
 }
 
