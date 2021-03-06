@@ -1,5 +1,6 @@
 package caravan.bus.wishbone
 import chisel3._
+import caravan.bus.common.Transaction
 
 /** class that allows the client to create a wishbone bus
  * @param config accepts a WishboneConfig type that configures various parameters for the bus
@@ -8,7 +9,7 @@ import chisel3._
  *         val slaveBus = Flipped(WishboneBus(WishboneConfig(addressWidth=32, dataWidth=32))
  *         }}}
  *         */
-case class WishboneBus(config: WishboneConfig) extends Bundle {
+case class WishboneBus(implicit val config: WishboneConfig) extends Bundle {
   /**
    * cyc_o ->  indicates that a valid bus cycle is in progress
    * stb_o ->  indicates a valid data transfer cycle
@@ -31,5 +32,15 @@ case class WishboneBus(config: WishboneConfig) extends Bundle {
   val dat_miso     = Input(UInt(config.dataWidth.W))
   val err_i        = Input(Bool())
   val sel_o        = Output(UInt((config.dataWidth/config.granularity).W))
+}
+
+class WishboneTransaction(implicit val config: WishboneConfig) extends Transaction {
+  override val validRequest: Bool = Input(Bool())
+  override val addrRequest: UInt = Input(UInt(config.addressWidth.W))
+  override val dataRequest: UInt = Input(UInt(config.dataWidth.W))
+  override val transactionSize: UInt = Input(UInt((config.dataWidth/config.granularity).W))
+  override val isWrite: Bool = Input(Bool())
+  override val validResponse: Bool = Output(Bool())
+  override val dataResponse: UInt = Output(Bool())
 }
 
