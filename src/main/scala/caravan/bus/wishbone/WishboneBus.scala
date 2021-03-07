@@ -38,7 +38,7 @@ class WishboneTransaction(implicit val config: WishboneConfig) extends Transacti
   override val validRequest: Bool = Input(Bool())
   override val addrRequest: UInt = Input(UInt(config.addressWidth.W))
   override val dataRequest: UInt = Input(UInt(config.dataWidth.W))
-  override val transactionSize: UInt = Input(UInt((config.dataWidth/config.granularity).W))
+  override val activeByteLane: UInt = Input(UInt((config.dataWidth/config.granularity).W))
   override val isWrite: Bool = Input(Bool())
   override val validResponse: Bool = Output(Bool())
   override val dataResponse: UInt = Output(Bool())
