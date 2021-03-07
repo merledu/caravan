@@ -9,7 +9,7 @@ import caravan.bus.common.Transaction
  *         val slaveBus = Flipped(WishboneBus(WishboneConfig(addressWidth=32, dataWidth=32))
  *         }}}
  *         */
-case class WishboneBus(implicit val config: WishboneConfig) extends Bundle {
+class WishboneBus(implicit val config: WishboneConfig) extends Bundle {
   /**
    * cyc_o ->  indicates that a valid bus cycle is in progress
    * stb_o ->  indicates a valid data transfer cycle
@@ -23,15 +23,14 @@ case class WishboneBus(implicit val config: WishboneConfig) extends Bundle {
    * rty_i -> indicates that the interface is not ready to accept or send data, and the cycle should be retried
    * sel_o -> the sel output which indicates where valid data lane is expected on the dat_i for READs or dat_o for WRITEs
    * */
-  val cyc_o        = Output(Bool())
-  val stb_o        = Output(Bool())
-  val ack_i        = Input(Bool())
-  val we_o         = Output(Bool())
-  val adr_o        = Output(UInt(config.addressWidth.W))
+  val cyc        = Output(Bool())
+  val stb        = Output(Bool())
+  val ack        = Input(Bool())
+  val we         = Output(Bool())
+  val adr        = Output(UInt(config.addressWidth.W))
   val dat_mosi     = Output(UInt(config.dataWidth.W))
   val dat_miso     = Input(UInt(config.dataWidth.W))
-  val err_i        = Input(Bool())
-  val sel_o        = Output(UInt((config.dataWidth/config.granularity).W))
+  val sel        = Output(UInt((config.dataWidth/config.granularity).W))
 }
 
 class WishboneTransaction(implicit val config: WishboneConfig) extends Transaction {
@@ -41,6 +40,6 @@ class WishboneTransaction(implicit val config: WishboneConfig) extends Transacti
   override val activeByteLane: UInt = Input(UInt((config.dataWidth/config.granularity).W))
   override val isWrite: Bool = Input(Bool())
   override val validResponse: Bool = Output(Bool())
-  override val dataResponse: UInt = Output(Bool())
+  override val dataResponse: UInt = Output(UInt(config.dataWidth.W))
 }
 
