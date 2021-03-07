@@ -10,7 +10,7 @@ abstract class Transaction extends Bundle {
   val validRequest: Bool
   val addrRequest: UInt
   val dataRequest: UInt
-  val transactionSize: UInt
+  val activeByteLane: UInt
   val isWrite: Bool
   val validResponse: Bool
   val dataResponse: UInt
