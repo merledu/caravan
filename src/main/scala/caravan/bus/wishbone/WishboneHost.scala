@@ -1,5 +1,6 @@
 package caravan.bus.wishbone
 import chisel3._
+import chisel3.experimental.DataMirror
 import chisel3.stage.ChiselStage
 import chisel3.util.Enum
 
@@ -18,12 +19,8 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      * cyc_o
      * all other signals are in an undefined state
      */
-    io.mbus.stb := false.B
-    io.mbus.cyc := false.B
-    io.mbus.we := DontCare
-    io.mbus.adr := DontCare
-    io.mbus.dat_mosi := DontCare
-    io.mbus.sel := DontCare
+
+    io.mbus.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
   }
 
   val dataReg = RegInit(0.U(config.dataWidth.W))
