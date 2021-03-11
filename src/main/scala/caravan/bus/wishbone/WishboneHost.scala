@@ -2,15 +2,25 @@ package caravan.bus.wishbone
 import chisel3._
 import chisel3.experimental.DataMirror
 import chisel3.stage.ChiselStage
-import chisel3.util.Enum
+import chisel3.util.{Decoupled, Enum}
 
 
 // Support only for Single READ/WRITE cycles for now
 class WishboneHost(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
-    val mbus = new WishboneBus()
-    val wbTrans = new WishboneTransaction()
+    val wbMasterTransmitter = Decoupled(new WishboneMaster())
+    val wbSlaveReceiver  = Flipped(Decoupled(new WishboneSlave()))
+    val ip2WbAdapter = Flipped(Decoupled(new IPToWishboneAdapter()))
+    val wb2IpAdapter = Decoupled(new WishboneToIPAdapter())
   })
+  /**
+   * Since valid indicates a valid request, the stb signal from wishbone
+   * also indicates the same. So stb and valid are connected together.
+   */
+  io.wbMasterTransmitter.valid := io.wbMasterTransmitter.bits.stb
+
+  /** FIXME: Assuming Master is always ready to accept data from Slave */
+  io.wbSlaveReceiver.ready := true.B
 
   when(reset.asBool() === true.B) {
     /**
@@ -19,8 +29,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      * cyc_o
      * all other signals are in an undefined state
      */
-
-    io.mbus.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
+    io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
   }
 
   val dataReg = RegInit(0.U(config.dataWidth.W))
@@ -33,20 +42,23 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
     /**
      * If host does not produce wait states then stb_o and cyc_o may be assigned the same signal.
      */
-    when(io.wbTrans.isWrite === false.B && io.wbTrans.validRequest) {
+
+    // also assuming that the master is always available to take request from the ip block
+    io.ip2WbAdapter.ready := true.B
+    when(io.ip2WbAdapter.bits.isWrite === false.B && io.ip2WbAdapter.valid && io.wbMasterTransmitter.ready) {
       /**
        * SINGLE READ CYCLE
        * host asserts adr_o, we_o, sel_o, stb_o and cyc_o
        */
-      io.mbus.stb := true.B
-      io.mbus.cyc := io.mbus.stb
-      io.mbus.we := io.wbTrans.isWrite
-      io.mbus.adr := io.wbTrans.addrRequest
-      io.mbus.dat_mosi := DontCare
-      io.mbus.sel := io.wbTrans.activeByteLane
+      io.wbMasterTransmitter.bits.stb := true.B
+      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
+      io.wbMasterTransmitter.bits.we := io.ip2WbAdapter.bits.isWrite
+      io.wbMasterTransmitter.bits.adr := io.ip2WbAdapter.bits.addrRequest
+      io.wbMasterTransmitter.bits.dat := 0.U
+      io.wbMasterTransmitter.bits.sel := io.ip2WbAdapter.bits.activeByteLane
 
-      when(io.mbus.ack) {
-        dataReg := io.mbus.dat_miso
+      when(io.wbSlaveReceiver.bits.ack) {
+        dataReg := io.wbSlaveReceiver.bits.dat
         respReg := true.B
       }
 
@@ -55,23 +67,21 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       /**
        * SINGLE WRITE CYCLE
        */
-      io.mbus.stb := DontCare
-      io.mbus.cyc := DontCare
-      io.mbus.we := DontCare
-      io.mbus.adr := DontCare
-      io.mbus.dat_mosi := DontCare
-      io.mbus.sel := DontCare
+      io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
     }
 
     when(stateReg === idle) {
-      stateReg := Mux(io.mbus.ack, latch_data, idle)
+      stateReg := Mux(io.wbSlaveReceiver.bits.ack, latch_data, idle)
     } .elsewhen(stateReg === latch_data) {
-      io.mbus.stb := false.B
-      io.mbus.cyc := io.mbus.stb
+      io.wbMasterTransmitter.bits.stb := false.B
+      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
     }
 
-    io.wbTrans.validResponse := respReg
-    io.wbTrans.dataResponse := dataReg
+    /** FIXME: not using the ready signal from the IP to send valid data
+     * assuming IP is always ready to accept data from the bus */
+    io.wb2IpAdapter.valid := respReg
+    io.wb2IpAdapter.bits.dataResponse := dataReg
+    io.wb2IpAdapter.bits.ackWrite := false.B
   }
 
 
