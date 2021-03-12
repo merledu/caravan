@@ -11,17 +11,12 @@ import caravan.bus.common.{FromBus, FromIp}
  *         */
 class WishboneMaster(implicit val config: WishboneConfig) extends Bundle {
   /**
-   * cyc_o ->  indicates that a valid bus cycle is in progress
-   * stb_o ->  indicates a valid data transfer cycle
-   * ack_i ->  indicates a normal termination of bus cycle
-   * we_o  ->  indicates whether the current bus cycle is a READ or WRITE cycle
-   * adr_o ->  carries the address for the current bus cycle
-   * dat_mosi ->  contains the data output from the master
-   * dat_miso ->  contains the data output from the slave
-   * err_i ->  indicates an abnormal bus cycle termination
-   * lock_o -> when asserted, indicates that the current bus cycle is uninterruptible
-   * rty_i -> indicates that the interface is not ready to accept or send data, and the cycle should be retried
-   * sel_o -> the sel output which indicates where valid data lane is expected on the dat_i for READs or dat_o for WRITEs
+   * cyc ->  indicates that a valid bus cycle is in progress
+   * stb ->  indicates a valid data transfer cycle
+   * we ->  indicates whether the current bus cycle is a READ or WRITE cycle
+   * adr ->  carries the address for the current bus cycle
+   * dat ->  contains the data output from the master
+   * sel -> the sel output which indicates where valid data lane is expected on the dat_i for READs or dat_o for WRITEs
    * */
   val cyc        = Bool()
   val stb        = Bool()
@@ -32,18 +27,19 @@ class WishboneMaster(implicit val config: WishboneConfig) extends Bundle {
 }
 
 class WishboneSlave(implicit val config: WishboneConfig) extends Bundle {
+  /**
+   * ack ->  indicates a normal termination of bus cycle
+   * dat ->  contains the data output from the slave
+   */
   val ack = Bool()
   val dat = UInt(config.dataWidth.W)
 }
 
 class IPToWishboneAdapter(implicit val config: WishboneConfig) extends FromIp {
-//  override val validRequest: Bool = Input(Bool())
   override val addrRequest: UInt = UInt(config.addressWidth.W)
   override val dataRequest: UInt = UInt(config.dataWidth.W)
   override val activeByteLane: UInt = UInt((config.dataWidth/config.granularity).W)
   override val isWrite: Bool = Bool()
-//  override val validResponse: Bool = Output(Bool())
-  //override val dataResponse: UInt = UInt(config.dataWidth.W)
 }
 
 class WishboneToIPAdapter(implicit val config: WishboneConfig) extends FromBus {
