@@ -1,6 +1,6 @@
 package caravan.bus.wishbone
 import chisel3._
-import caravan.bus.common.{FromBus, FromIp}
+import caravan.bus.common.{AbstrRequest, AbstrResponse}
 
 /** class that allows the client to create a wishbone bus
  * @param config accepts a WishboneConfig type that configures various parameters for the bus
@@ -35,14 +35,14 @@ class WishboneSlave(implicit val config: WishboneConfig) extends Bundle {
   val dat = UInt(config.dataWidth.W)
 }
 
-class IPToWishboneAdapter(implicit val config: WishboneConfig) extends FromIp {
+class Request(implicit val config: WishboneConfig) extends AbstrRequest {
   override val addrRequest: UInt = UInt(config.addressWidth.W)
   override val dataRequest: UInt = UInt(config.dataWidth.W)
   override val activeByteLane: UInt = UInt((config.dataWidth/config.granularity).W)
   override val isWrite: Bool = Bool()
 }
 
-class WishboneToIPAdapter(implicit val config: WishboneConfig) extends FromBus {
+class Response(implicit val config: WishboneConfig) extends AbstrResponse {
   override val dataResponse: UInt = UInt(config.dataWidth.W)
   override val ackWrite: Bool = Bool()
 }
