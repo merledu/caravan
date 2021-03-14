@@ -6,17 +6,14 @@ import chisel3._
  * This is used as a template for e.g when the core wants to communicate with the memory or with the peripheral registers.
  * It will set these signals up in order to talk to the Host adapter of the relevant bus protocol
  */
-abstract class FromIp extends Bundle {
-//  val validRequest: Bool
+abstract class AbstrRequest extends Bundle {
   val addrRequest: UInt
   val dataRequest: UInt
   val activeByteLane: UInt
   val isWrite: Bool
-//  val validResponse: Bool
-//  val dataResponse: UInt
 }
 
-abstract class FromBus extends Bundle {
+abstract class AbstrResponse extends Bundle {
   val dataResponse: UInt
   val ackWrite: Bool
 }
