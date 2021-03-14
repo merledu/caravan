@@ -1,52 +1,65 @@
 package caravan.bus.wishbone
 import chisel3._
 import chisel3.stage.ChiselStage
+import chisel3.util.Decoupled
 
 class WishboneDevice(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
-    val sbus = Flipped(new WishboneBus())
-    val wbTrans = Flipped(new WishboneTransaction())
+    val wbSlaveTransmitter = Decoupled(new WishboneSlave())
+    val wbMasterReceiver = Flipped(Decoupled(new WishboneMaster()))
+    val reqOut = Decoupled(new Request())
+    val rspIn = Flipped(Decoupled(new Response()))
   })
 
+  /** FIXME: Assuming wishbone slave is always ready to accept wishbone master data */
+  io.wbMasterReceiver.ready := true.B
+  /** FIXME: Assuming wishbone slave is always ready to accept ip response data */
+  io.rspIn.ready := true.B
 
-  when(io.sbus.cyc && io.sbus.stb) {
-    when(!io.sbus.we) {
+  when(io.wbMasterReceiver.valid && io.wbMasterReceiver.bits.cyc && io.wbMasterReceiver.bits.stb) {
+    when(!io.wbMasterReceiver.bits.we) {
       // READ CYCLE
-      val addr = io.sbus.adr
-      val activeByteLane = io.sbus.sel
-      io.wbTrans.validRequest := true.B
-      io.wbTrans.addrRequest := addr
-      io.wbTrans.dataRequest := DontCare
-      io.wbTrans.activeByteLane := activeByteLane
-      io.wbTrans.isWrite := false.B
-      when(io.wbTrans.validResponse) {
-        io.sbus.ack := true.B
-        io.sbus.dat_miso := io.wbTrans.dataResponse
+      val addr = io.wbMasterReceiver.bits.adr
+      val activeByteLane = io.wbMasterReceiver.bits.sel
+      /** FIXME: Assuming ip is always ready to accept wishbone slave's request */
+      io.reqOut.valid := true.B
+      io.reqOut.bits.addrRequest := addr
+      io.reqOut.bits.dataRequest := DontCare
+      io.reqOut.bits.activeByteLane := activeByteLane
+      io.reqOut.bits.isWrite := false.B
+      when(io.rspIn.valid) {
+        /** FIXME: Assuming wishbone master is always ready to accept slave's data response */
+        io.wbSlaveTransmitter.valid := true.B
+        io.wbSlaveTransmitter.bits.ack := true.B
+        io.wbSlaveTransmitter.bits.dat := io.rspIn.bits.dataResponse
       } .otherwise {
-        io.sbus.ack := false.B
-        io.sbus.dat_miso := DontCare
+        io.wbSlaveTransmitter.valid := false.B
+        io.wbSlaveTransmitter.bits.ack := false.B
+        io.wbSlaveTransmitter.bits.dat := DontCare
       }
     } .otherwise {
       // WRITE CYCLE
-      io.wbTrans.validRequest := DontCare
-      io.wbTrans.addrRequest := DontCare
-      io.wbTrans.dataRequest := DontCare
-      io.wbTrans.activeByteLane := DontCare
-      io.wbTrans.isWrite := DontCare
+      io.reqOut.valid := DontCare
+      io.reqOut.bits.addrRequest := DontCare
+      io.reqOut.bits.dataRequest := DontCare
+      io.reqOut.bits.activeByteLane := DontCare
+      io.reqOut.bits.isWrite := DontCare
 
-      io.sbus.ack := DontCare
-      io.sbus.dat_miso := DontCare
+      io.wbSlaveTransmitter.valid := DontCare
+      io.wbSlaveTransmitter.bits.ack := DontCare
+      io.wbSlaveTransmitter.bits.dat := DontCare
     }
   } .otherwise {
     // No valid bus request from host
-    io.wbTrans.validRequest := DontCare
-    io.wbTrans.addrRequest := DontCare
-    io.wbTrans.dataRequest := DontCare
-    io.wbTrans.activeByteLane := DontCare
-    io.wbTrans.isWrite := DontCare
+    io.reqOut.valid := false.B
+    io.reqOut.bits.addrRequest := DontCare
+    io.reqOut.bits.dataRequest := DontCare
+    io.reqOut.bits.activeByteLane := DontCare
+    io.reqOut.bits.isWrite := DontCare
 
-    io.sbus.ack := false.B
-    io.sbus.dat_miso := DontCare
+    io.wbSlaveTransmitter.valid := false.B
+    io.wbSlaveTransmitter.bits.ack := false.B
+    io.wbSlaveTransmitter.bits.dat := DontCare
   }
   /**
    * Rule 3.35: In standard mode, the cycle terminating signals ack_o, err_o and rty_o must be generated
