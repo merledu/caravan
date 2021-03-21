@@ -13,6 +13,8 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
 
   /** FIXME: Assuming wishbone slave is always ready to accept wishbone master data */
   io.wbMasterReceiver.ready := true.B
+  dontTouch(io.wbMasterReceiver.ready)
+  dontTouch(io.wbSlaveTransmitter.ready)
   /** FIXME: Assuming wishbone slave is always ready to accept ip response data */
   io.rspIn.ready := true.B
 
@@ -39,15 +41,21 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
       }
     } .otherwise {
       // WRITE CYCLE
-      io.reqOut.valid := DontCare
-      io.reqOut.bits.addrRequest := DontCare
-      io.reqOut.bits.dataRequest := DontCare
-      io.reqOut.bits.activeByteLane := DontCare
-      io.reqOut.bits.isWrite := DontCare
+      io.reqOut.valid := true.B
+      io.reqOut.bits.addrRequest := io.wbMasterReceiver.bits.adr
+      io.reqOut.bits.dataRequest := io.wbMasterReceiver.bits.dat
+      io.reqOut.bits.activeByteLane := io.wbMasterReceiver.bits.sel
+      io.reqOut.bits.isWrite := io.wbMasterReceiver.bits.we
+      when(io.rspIn.valid) {
+        io.wbSlaveTransmitter.valid := true.B
+        io.wbSlaveTransmitter.bits.ack := true.B
+        io.wbSlaveTransmitter.bits.dat := DontCare
+      } .otherwise {
+        io.wbSlaveTransmitter.valid := false.B
+        io.wbSlaveTransmitter.bits.ack := false.B
+        io.wbSlaveTransmitter.bits.dat := DontCare
+      }
 
-      io.wbSlaveTransmitter.valid := DontCare
-      io.wbSlaveTransmitter.bits.ack := DontCare
-      io.wbSlaveTransmitter.bits.dat := DontCare
     }
   } .otherwise {
     // No valid bus request from host
