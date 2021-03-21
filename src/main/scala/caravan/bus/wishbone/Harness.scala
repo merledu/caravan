@@ -48,25 +48,38 @@ class DummyMemController(implicit val config: WishboneConfig) extends Module {
     val req = Flipped(Decoupled(new Request()))
     val rsp = Decoupled(new Response())
   })
-  io.rsp.bits.ackWrite := false.B // only read support for now
+  // the register that sends valid along with the data read from memory
+  // a register is used so that it synchronizes along with the data that comes after one cycle
+  val validReg = RegInit(false.B)
+  io.rsp.valid := validReg
+  io.rsp.bits.ackWrite := false.B   // by default write is false, gets true if request is of write.
   io.req.ready := true.B // always ready to accept requests from device
   val mem = SyncReadMem(1024, UInt(32.W))
-  loadMemoryFromFile(mem, "/User/mbp/Desktop/mem1.txt")
+  loadMemoryFromFile(mem, "/Users/mbp/Desktop/mem1.txt")
   when(io.req.valid && !io.req.bits.isWrite) {
-    io.rsp.valid := true.B
     when(io.req.bits.activeByteLane === "b0001".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest))
+      io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest)(7,0))
+      validReg := true.B
     } .elsewhen(io.req.bits.activeByteLane === "b0011".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest))
+      io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest)(15,0))
+      validReg := true.B
     } .elsewhen(io.req.bits.activeByteLane === "b0111".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest))
+      io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest)(23,0))
+      validReg := true.B
     } .elsewhen(io.req.bits.activeByteLane === "b1111".U) {
       io.rsp.bits.dataResponse := mem.read(io.req.bits.addrRequest)
+      validReg := true.B
     } .otherwise {
       io.rsp.bits.dataResponse := DontCare
+      validReg := false.B
     }
-  } .otherwise {
-    io.rsp.valid := false.B
+  } .elsewhen(io.req.valid && io.req.bits.isWrite) {
+    mem.write(io.req.bits.addrRequest, io.req.bits.dataRequest)
+    validReg := true.B
+    io.rsp.bits.dataResponse := DontCare
+    io.rsp.bits.ackWrite := true.B
+  }. otherwise {
+    validReg := false.B
     io.rsp.bits.dataResponse := DontCare
   }
 }
