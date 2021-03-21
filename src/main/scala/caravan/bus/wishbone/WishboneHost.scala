@@ -21,6 +21,8 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
 
   /** FIXME: Assuming Master is always ready to accept data from Slave */
   io.wbSlaveReceiver.ready := true.B
+  dontTouch(io.wbMasterTransmitter.ready)
+  dontTouch(io.wbSlaveReceiver.ready)
 
   when(reset.asBool() === true.B) {
     /**
@@ -34,6 +36,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
 
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
+  val writeAckReg = RegInit(false.B)
   // state machine to conform to the wishbone protocol of negating stb and cyc when data latched
   val idle :: latch_data :: Nil = Enum(2)
   val stateReg = RegInit(idle)
@@ -63,10 +66,25 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       }
 
 
-    } .otherwise {
+    } .elsewhen(io.reqIn.bits.isWrite === true.B && io.reqIn.valid && io.wbMasterTransmitter.ready) {
       /**
        * SINGLE WRITE CYCLE
+       *
        */
+      io.wbMasterTransmitter.bits.stb := true.B
+      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
+      io.wbMasterTransmitter.bits.we := io.reqIn.bits.isWrite
+      io.wbMasterTransmitter.bits.adr := io.reqIn.bits.addrRequest
+      io.wbMasterTransmitter.bits.dat := io.reqIn.bits.dataRequest
+      io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
+
+      when(io.wbSlaveReceiver.bits.ack) {
+        dataReg := DontCare
+        respReg := true.B
+        writeAckReg := true.B
+      }
+    } .otherwise {
+
       io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
     }
 
@@ -75,13 +93,15 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
     } .elsewhen(stateReg === latch_data) {
       io.wbMasterTransmitter.bits.stb := false.B
       io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
+      respReg := io.wbMasterTransmitter.bits.stb
+      stateReg := idle
     }
 
     /** FIXME: not using the ready signal from the IP to send valid data
      * assuming IP is always ready to accept data from the bus */
     io.rspOut.valid := respReg
     io.rspOut.bits.dataResponse := dataReg
-    io.rspOut.bits.ackWrite := false.B
+    io.rspOut.bits.ackWrite := writeAckReg
   }
 
 
