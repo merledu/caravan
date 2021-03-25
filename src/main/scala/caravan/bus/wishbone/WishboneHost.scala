@@ -33,7 +33,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      */
     io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
   }
-
+  // registers used to provide the response to the ip.
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
   val writeAckReg = RegInit(false.B)
@@ -61,6 +61,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
 
       when(io.wbSlaveReceiver.bits.ack) {
+        writeAckReg := false.B
         dataReg := io.wbSlaveReceiver.bits.dat
         respReg := true.B
       }
