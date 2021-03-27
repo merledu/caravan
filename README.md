@@ -8,7 +8,7 @@ Caravan
 Caravan intends to be equipped with a fully fledged API for easily creating open source bus protocols in Chisel based designs
 
 ## Motivation
-There are fairly limited resources available for the Chisel developers to use pre-built opensource bus protocols. Even if they are present, they are outdated or not properly managed in a single place. This project aims to build a one-stop platform for all Chisel based bus protocols that are supported to work on the FPGAs as well as on the ASIC flow.
+There are fairly limited resources available for the Chisel developers to use pre-built opensource bus protocols. Even if they are present, they are tightly integrated inside a complex project or outdated or not properly managed in a single place. This project aims to be a one-stop platform for all Chisel based bus protocols that are supported to work on the FPGAs as well as on the ASIC flow.
 
 ## Prerequisite
 #### JDK 8 or newer
