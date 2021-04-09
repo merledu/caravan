@@ -11,14 +11,20 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
     val rspIn = Flipped(Decoupled(new Response()))
   })
 
-  /** FIXME: Assuming wishbone slave is always ready to accept wishbone master data */
-  io.wbMasterReceiver.ready := true.B
+  /** fire() is a handy function indicating whenever the master sends a valid request */
+  def fire(): Bool = io.wbMasterReceiver.valid && io.wbMasterReceiver.bits.cyc && io.wbMasterReceiver.bits.stb
+
+  val readyReg = RegInit(true.B)  // initially slave is ready to accept request
+  val ack = WireInit(false.B)
+  readyReg := ~(fire() && !ack)
+  /** Wishbone slave is only ready when there is no pending requests to be sent */
+  io.wbMasterReceiver.ready := readyReg
   dontTouch(io.wbMasterReceiver.ready)
   dontTouch(io.wbSlaveTransmitter.ready)
   /** FIXME: Assuming wishbone slave is always ready to accept ip response data */
   io.rspIn.ready := true.B
 
-  when(io.wbMasterReceiver.valid && io.wbMasterReceiver.bits.cyc && io.wbMasterReceiver.bits.stb) {
+  when(fire()) {
     when(!io.wbMasterReceiver.bits.we) {
       // READ CYCLE
       val addr = io.wbMasterReceiver.bits.adr
@@ -32,11 +38,13 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
       when(io.rspIn.valid) {
         /** FIXME: Assuming wishbone master is always ready to accept slave's data response */
         io.wbSlaveTransmitter.valid := true.B
-        io.wbSlaveTransmitter.bits.ack := true.B
+//        io.wbSlaveTransmitter.bits.ack := true.B
+        ack := true.B
         io.wbSlaveTransmitter.bits.dat := io.rspIn.bits.dataResponse
       } .otherwise {
         io.wbSlaveTransmitter.valid := false.B
-        io.wbSlaveTransmitter.bits.ack := false.B
+       // io.wbSlaveTransmitter.bits.ack := false.B
+        ack := false.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       }
     } .otherwise {
@@ -48,11 +56,13 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
       io.reqOut.bits.isWrite := io.wbMasterReceiver.bits.we
       when(io.rspIn.valid) {
         io.wbSlaveTransmitter.valid := true.B
-        io.wbSlaveTransmitter.bits.ack := true.B
+//        io.wbSlaveTransmitter.bits.ack := true.B
+        ack := true.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       } .otherwise {
         io.wbSlaveTransmitter.valid := false.B
-        io.wbSlaveTransmitter.bits.ack := false.B
+        //io.wbSlaveTransmitter.bits.ack := false.B
+        ack := false.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       }
 
@@ -66,9 +76,12 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
     io.reqOut.bits.isWrite := DontCare
 
     io.wbSlaveTransmitter.valid := false.B
-    io.wbSlaveTransmitter.bits.ack := false.B
+//    io.wbSlaveTransmitter.bits.ack := false.B
+    ack := false.B
     io.wbSlaveTransmitter.bits.dat := DontCare
   }
+
+  io.wbSlaveTransmitter.bits.ack := ack
   /**
    * Rule 3.35: In standard mode, the cycle terminating signals ack_o, err_o and rty_o must be generated
    * in response to the logical AND of cyc_i and stb_i.
