@@ -2,7 +2,7 @@ package caravan.bus.wishbone
 import chisel3._
 import chisel3.experimental.DataMirror
 import chisel3.stage.ChiselStage
-import chisel3.util.{Decoupled, Enum}
+import chisel3.util.{Decoupled, Enum, MuxCase}
 
 
 // Support only for Single READ/WRITE cycles for now
@@ -13,6 +13,8 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
     val reqIn = Flipped(Decoupled(new Request()))
     val rspOut = Decoupled(new Response())
   })
+
+  def fire(): Bool = io.reqIn.valid && io.wbMasterTransmitter.ready
   /**
    * Since valid indicates a valid request, the stb signal from wishbone
    * also indicates the same. So stb and valid are connected together.
@@ -33,22 +35,41 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      */
     io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
   }
+  val startWBReadTransaction = RegInit(false.B)
+  val startWBWriteTransaction = RegInit(false.B)
   // registers used to provide the response to the ip.
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
-  val writeAckReg = RegInit(false.B)
   // state machine to conform to the wishbone protocol of negating stb and cyc when data latched
   val idle :: latch_data :: Nil = Enum(2)
   val stateReg = RegInit(idle)
+
+  /** used to pass ready signal to the ip
+   * is ready by default
+   * de-asserts ready when a valid request is made and slave accepts it (fire)
+   * re-asserts ready when the response data from slave is being latched to start another req. */
+  val readyReg = RegInit(true.B)
+  when(fire) {
+    readyReg := false.B
+  }
+  when(stateReg === latch_data) {
+    readyReg := true.B
+  }
 
   if(!config.waitState) {
     /**
      * If host does not produce wait states then stb_o and cyc_o may be assigned the same signal.
      */
 
-    // also assuming that the master is always available to take request from the ip block
-    io.reqIn.ready := true.B
-    when(io.reqIn.bits.isWrite === false.B && io.reqIn.valid && io.wbMasterTransmitter.ready) {
+    // master is only ready to accept req when any prev req not pending
+    io.reqIn.ready := readyReg
+    when(io.reqIn.bits.isWrite === false.B && fire) {
+      startWBReadTransaction := true.B
+    } .elsewhen(io.reqIn.bits.isWrite === true.B && fire) {
+      startWBWriteTransaction := true.B
+    }
+
+    when(startWBReadTransaction) {
       /**
        * SINGLE READ CYCLE
        * host asserts adr_o, we_o, sel_o, stb_o and cyc_o
@@ -59,15 +80,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       io.wbMasterTransmitter.bits.adr := io.reqIn.bits.addrRequest
       io.wbMasterTransmitter.bits.dat := 0.U
       io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
-
-      when(io.wbSlaveReceiver.bits.ack) {
-        writeAckReg := false.B
-        dataReg := io.wbSlaveReceiver.bits.dat
-        respReg := true.B
-      }
-
-
-    } .elsewhen(io.reqIn.bits.isWrite === true.B && io.reqIn.valid && io.wbMasterTransmitter.ready) {
+    } .elsewhen(startWBWriteTransaction) {
       /**
        * SINGLE WRITE CYCLE
        *
@@ -78,23 +91,22 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       io.wbMasterTransmitter.bits.adr := io.reqIn.bits.addrRequest
       io.wbMasterTransmitter.bits.dat := io.reqIn.bits.dataRequest
       io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
-
-      when(io.wbSlaveReceiver.bits.ack) {
-        dataReg := DontCare
-        respReg := true.B
-        writeAckReg := true.B
-      }
     } .otherwise {
-
       io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
+    }
+
+    when(io.wbSlaveReceiver.bits.ack) {
+      dataReg := io.wbSlaveReceiver.bits.dat
+      respReg := true.B
+      // making the registers false when ack received so that in the next cycle stb, cyc and other signals get low
+      startWBReadTransaction := false.B
+      startWBWriteTransaction := false.B
     }
 
     when(stateReg === idle) {
       stateReg := Mux(io.wbSlaveReceiver.bits.ack, latch_data, idle)
     } .elsewhen(stateReg === latch_data) {
-      io.wbMasterTransmitter.bits.stb := false.B
-      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
-      respReg := io.wbMasterTransmitter.bits.stb
+      respReg := false.B
       stateReg := idle
     }
 
@@ -102,7 +114,6 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      * assuming IP is always ready to accept data from the bus */
     io.rspOut.valid := respReg
     io.rspOut.bits.dataResponse := dataReg
-    io.rspOut.bits.ackWrite := writeAckReg
   }
 
 
