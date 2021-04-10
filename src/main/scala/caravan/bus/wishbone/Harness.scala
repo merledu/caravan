@@ -14,7 +14,6 @@ class Harness(implicit val config: WishboneConfig) extends Module {
 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
-    val ackWrite = Output(Bool())
   })
 
   val wbHost = Module(new WishboneHost())
@@ -26,7 +25,7 @@ class Harness(implicit val config: WishboneConfig) extends Module {
   wbHost.io.wbMasterTransmitter <> wbSlave.io.wbMasterReceiver
   wbSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
 
-  wbHost.io.reqIn.valid := io.valid
+  wbHost.io.reqIn.valid := Mux(wbHost.io.reqIn.ready, io.valid, false.B)
   wbHost.io.reqIn.bits.addrRequest := io.addrReq
   wbHost.io.reqIn.bits.dataRequest := io.dataReq
   wbHost.io.reqIn.bits.activeByteLane := io.byteLane
@@ -38,7 +37,6 @@ class Harness(implicit val config: WishboneConfig) extends Module {
   wbSlave.io.rspIn <> memCtrl.io.rsp
 
   io.dataResp := wbHost.io.rspOut.bits.dataResponse
-  io.ackWrite := wbHost.io.rspOut.bits.ackWrite
   io.validResp := wbHost.io.rspOut.valid
 
 }
@@ -52,7 +50,6 @@ class DummyMemController(implicit val config: WishboneConfig) extends Module {
   // a register is used so that it synchronizes along with the data that comes after one cycle
   val validReg = RegInit(false.B)
   io.rsp.valid := validReg
-  io.rsp.bits.ackWrite := false.B   // by default write is false, gets true if request is of write.
   io.req.ready := true.B // always ready to accept requests from device
   val mem = SyncReadMem(1024, UInt(32.W))
   loadMemoryFromFile(mem, "/Users/mbp/Desktop/mem1.txt")
@@ -77,7 +74,6 @@ class DummyMemController(implicit val config: WishboneConfig) extends Module {
     mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest)
     validReg := true.B
     io.rsp.bits.dataResponse := DontCare
-    io.rsp.bits.ackWrite := true.B
   }. otherwise {
     validReg := false.B
     io.rsp.bits.dataResponse := DontCare
