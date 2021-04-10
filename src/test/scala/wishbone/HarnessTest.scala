@@ -52,7 +52,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
     implicit val config = WishboneConfig(10, 32)
     test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
-      c.io.valid.poke(false.B)
+      c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke("habcdef01".U)
       c.io.byteLane.poke("b1111".U)
