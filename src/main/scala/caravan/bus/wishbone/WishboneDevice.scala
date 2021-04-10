@@ -13,12 +13,9 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
 
   /** fire() is a handy function indicating whenever the master sends a valid request */
   def fire(): Bool = io.wbMasterReceiver.valid && io.wbMasterReceiver.bits.cyc && io.wbMasterReceiver.bits.stb
-
-  val readyReg = RegInit(true.B)  // initially slave is ready to accept request
   val ack = WireInit(false.B)
-  readyReg := ~(fire() && !ack)
-  /** Wishbone slave is only ready when there is no pending requests to be sent */
-  io.wbMasterReceiver.ready := readyReg
+  /** FIXME: Assuming wishbone slave is always ready to accept master req */
+  io.wbMasterReceiver.ready := true.B
   dontTouch(io.wbMasterReceiver.ready)
   dontTouch(io.wbSlaveTransmitter.ready)
   /** FIXME: Assuming wishbone slave is always ready to accept ip response data */
