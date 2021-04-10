@@ -15,5 +15,4 @@ abstract class AbstrRequest extends Bundle {
 
 abstract class AbstrResponse extends Bundle {
   val dataResponse: UInt
-  val ackWrite: Bool
 }
