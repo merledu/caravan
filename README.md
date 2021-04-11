@@ -48,7 +48,7 @@ class ParentModule(implicit val config: WishboneConfig) extends Module {
 
 Here is the waveform view of writing a data to a synchronous memory and then reading from the same address:
 
-![wb_read_write](https://github.com/merledu/caravan/blob/main/doc/wb_standard.png)
+![wb_read_write](https://github.com/merledu/caravan/blob/main/doc/wb_timing.png)
 
 To reproduce the following waveform in a VCD format run the test in the following way:
 ```console
