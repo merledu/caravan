@@ -2,7 +2,8 @@ package caravan.bus.wishbone
 import chisel3._
 import caravan.bus.common.{AbstrRequest, AbstrResponse}
 
-
+// so that every wishbone related bundle extends from this parent class.
+// will help in future regarding type parameterization
 case class WB() extends Bundle
 /** class that allows the client to create a wishbone bus
  * @param config accepts a WishboneConfig type that configures various parameters for the bus
