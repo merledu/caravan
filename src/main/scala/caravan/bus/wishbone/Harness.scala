@@ -4,7 +4,7 @@ import chisel3.stage.ChiselStage
 import chisel3.util.{Cat, Decoupled}
 import chisel3.util.experimental.loadMemoryFromFile
 
-class Harness(implicit val config: WishboneConfig) extends Module {
+class Harness(programFile: String)(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -18,7 +18,7 @@ class Harness(implicit val config: WishboneConfig) extends Module {
 
   val wbHost = Module(new WishboneHost())
   val wbSlave = Module(new WishboneDevice())
-  val memCtrl = Module(new DummyMemController())
+  val memCtrl = Module(new DummyMemController(programFile))
 
   wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
@@ -41,7 +41,7 @@ class Harness(implicit val config: WishboneConfig) extends Module {
 
 }
 
-class DummyMemController(implicit val config: WishboneConfig) extends Module {
+class DummyMemController(programFile: String)(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val req = Flipped(Decoupled(new Request()))
     val rsp = Decoupled(new Response())
@@ -52,7 +52,7 @@ class DummyMemController(implicit val config: WishboneConfig) extends Module {
   io.rsp.valid := validReg
   io.req.ready := true.B // always ready to accept requests from device
   val mem = SyncReadMem(1024, UInt(32.W))
-  loadMemoryFromFile(mem, "/Users/mbp/Desktop/mem1.txt")
+  loadMemoryFromFile(mem, programFile)
   when(io.req.valid && !io.req.bits.isWrite) {
     when(io.req.bits.activeByteLane === "b0001".U) {
       io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest/4.U)(7,0))
@@ -82,5 +82,5 @@ class DummyMemController(implicit val config: WishboneConfig) extends Module {
 
 object HarnessDriver extends App {
   implicit val config = WishboneConfig(addressWidth = 10, dataWidth = 32)
-  println((new ChiselStage).emitVerilog(new Harness()))
+  println((new ChiselStage).emitVerilog(new Harness("/Users/mbp/Desktop/mem1.txt")))
 }
