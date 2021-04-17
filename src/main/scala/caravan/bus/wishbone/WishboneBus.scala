@@ -1,10 +1,11 @@
 package caravan.bus.wishbone
 import chisel3._
-import caravan.bus.common.{AbstrRequest, AbstrResponse}
+import caravan.bus.common.{AbstrRequest, AbstrResponse, BusDevice, BusHost}
 
 // so that every wishbone related bundle extends from this parent class.
 // will help in future regarding type parameterization
-case class WB() extends Bundle
+case class WBHost() extends BusHost
+case class WBDevice() extends BusDevice
 /** class that allows the client to create a wishbone bus
  * @param config accepts a WishboneConfig type that configures various parameters for the bus
  * @example {{{
@@ -12,7 +13,7 @@ case class WB() extends Bundle
  *         val slaveBus = Flipped(WishboneBus(WishboneConfig(addressWidth=32, dataWidth=32))
  *         }}}
  *         */
-class WishboneMaster(implicit val config: WishboneConfig) extends WB {
+class WishboneMaster(implicit val config: WishboneConfig) extends WBHost {
   /**
    * cyc ->  indicates that a valid bus cycle is in progress
    * stb ->  indicates a valid data transfer cycle
@@ -29,7 +30,7 @@ class WishboneMaster(implicit val config: WishboneConfig) extends WB {
   val sel        = UInt((config.dataWidth/config.granularity).W)
 }
 
-class WishboneSlave(implicit val config: WishboneConfig) extends WB {
+class WishboneSlave(implicit val config: WishboneConfig) extends WBDevice {
   /**
    * ack ->  indicates a normal termination of bus cycle
    * dat ->  contains the data output from the slave
