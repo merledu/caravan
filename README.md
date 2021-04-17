@@ -25,6 +25,7 @@ Here is how to get started and ensure everything is correctly set up:
 ```console
 foo@bar:~$ git clone https://github.com/merledu/caravan.git
 foo@bar:~$ cd caravan
+foo@bar:~/caravan$ git checkout v0.1.0
 foo@bar:~/caravan$ sbt
 sbt:Caravan> test
 ```
