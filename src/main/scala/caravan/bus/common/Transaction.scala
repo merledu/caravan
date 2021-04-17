@@ -16,3 +16,6 @@ abstract class AbstrRequest extends Bundle {
 abstract class AbstrResponse extends Bundle {
   val dataResponse: UInt
 }
+
+class BusHost extends Bundle
+class BusDevice extends Bundle
