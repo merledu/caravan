@@ -1,6 +1,8 @@
 ### Project Specific stuff
 test_run_dir/*
 ### XilinxISE template
+#sphinx stuff
+docs/_build/*
 # intermediate build files
 .metals/
 .bloop/
