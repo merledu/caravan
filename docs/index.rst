@@ -6,15 +6,21 @@
 Welcome to Caravan's documentation!
 ===================================
 
+Caravan is a framework that aims to provide Chisel designers with an easier way to create and integrate open-source
+bus protocols in their designs.
+
+This documentation is intended towards different audiences.
+
+The :doc:`User Guide <user/index>` explains how to get started with Caravan, starting from installation.
+
+The :doc:`Developer's Guide <dev/index>` is aimed at developers of Caravan itself. It explains how to set up a
+development environment, how the source code is organized, and how patches and bug reports can be submitted to
+the project.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Chapters
+   :hidden:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   user/index.rst
+   dev/index.rst
