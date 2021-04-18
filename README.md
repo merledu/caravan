@@ -66,9 +66,9 @@ sbt:Caravan> testOnly wishbone.HarnessTest -- -DwriteVcd=1
 2. Allow creating Shared Bus Interconnection with multiple masters and multiple slaves.
 
 
-## Problems? Questions?
+## Get Involved
 
-Feel free to send questions or problems at hadirkhan10@gmail.com. (this will be changed in future to a focused Gitter channel)
+We would love to have you join the community and ask/engage/solve problems related to the project here: https://gitter.im/merl-caravan/community
 
 ## Contribution
 This platform can only be built by your efforts. Open issues and send PRs so that they can be merged and make Caravan awesome! 
