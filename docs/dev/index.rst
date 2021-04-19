@@ -7,3 +7,4 @@ Caravan Developer's Guide
 
    devsetup
    hierarchy
+   fundamentals
