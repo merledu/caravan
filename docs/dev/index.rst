@@ -6,3 +6,4 @@ Caravan Developer's Guide
    :caption: Contents
 
    devsetup
+   hierarchy
