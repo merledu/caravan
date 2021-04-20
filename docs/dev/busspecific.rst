@@ -107,8 +107,6 @@ Once the protocol specific master and slave bundles are ready, the adapters can 
 Here is how the two adapters look next to each other:
 
 .. image:: ../images/wishbone-WB_Host.png
-    :width: 688
-    :height: 441
 
 
 The ``WishboneHost`` adapter is created here: ``main/scala/caravan/bus/wishbone/WishboneHost.scala``
@@ -157,8 +155,67 @@ This time it uses the ``reqOut`` interface to send the request to the user's IP 
 or memory)` and receives the ``rspIn`` back from the user's IP `(which then is sent back as a response to the
 host adapter)`.
 
+Creating the Harness
+^^^^^^^^^^^^^^^^^^^^
 
+The testing harness is created to connect the adapters together and verify the correct functionality. In this harness
+a single point-point interconnection scheme based on wishbone is tested. The host adapter would communicate with
+the user's IP (in our case the test-bench stimuli for now) and the device adapter would also communicate with the user's
+IP (a dummy memory that we created in the harness itself).
 
+.. image:: ../images/harness.png
+
+The dummy memory interface is implemented inside the harness here: ``main/scala/caravan/bus/wishbone/Harness.scala``
+
+.. code-block:: scala
+
+    class DummyMemController(programFile: String)(implicit val config: WishboneConfig) extends Module {
+        val io = IO(new Bundle {
+            val req = Flipped(Decoupled(new Request()))
+            val rsp = Decoupled(new Response())
+        })
+
+        // implementation specific logic
+    }
+
+The ``Harness`` module is created here as well: ``main/scala/caravan/bus/wishbone/Harness.scala``
+
+.. code-block:: scala
+
+    class Harness(programFile: String)(implicit val config: WishboneConfig) extends Module {
+        val io = IO(new Bundle {
+            val valid = Input(Bool())
+            val addrReq = Input(UInt(config.addressWidth.W))
+            val dataReq = Input(UInt(config.dataWidth.W))
+            val byteLane = Input(UInt((config.dataWidth/config.granularity).W))
+            val isWrite = Input(Bool())
+
+            val validResp = Output(Bool())
+            val dataResp = Output(UInt(32.W))
+        })
+
+        val wbHost = Module(new WishboneHost())
+        val wbSlave = Module(new WishboneDevice())
+        val memCtrl = Module(new DummyMemController(programFile))
+
+        wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
+
+        wbHost.io.wbMasterTransmitter <> wbSlave.io.wbMasterReceiver
+        wbSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
+
+        wbHost.io.reqIn.valid := Mux(wbHost.io.reqIn.ready, io.valid, false.B)
+        wbHost.io.reqIn.bits.addrRequest := io.addrReq
+        wbHost.io.reqIn.bits.dataRequest := io.dataReq
+        wbHost.io.reqIn.bits.activeByteLane := io.byteLane
+        wbHost.io.reqIn.bits.isWrite := io.isWrite
+
+        wbSlave.io.reqOut <> memCtrl.io.req
+        wbSlave.io.rspIn <> memCtrl.io.rsp
+
+        io.dataResp := wbHost.io.rspOut.bits.dataResponse
+        io.validResp := wbHost.io.rspOut.valid
+
+    }
 
 
 
