@@ -2,10 +2,9 @@ Caravan
 =======================
 
 [![Join the chat at https://gitter.im/merl-caravan/community](https://badges.gitter.im/merl-caravan/community.svg)](https://gitter.im/merl-caravan/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
+[![Documentation Status](https://readthedocs.org/projects/caravan/badge/?version=latest)](https://caravan.readthedocs.io/en/latest/?badge=latest)
 ![Apache License](https://img.shields.io/github/license/merledu/caravan?style=plastic)
 ![GitHub contributors](https://img.shields.io/github/contributors/merledu/caravan?style=plastic)
-![GitHub issues](https://img.shields.io/github/issues/merledu/caravan?color=green&label=issues&style=plastic)
 ![GitHub contribution](https://img.shields.io/badge/contribution-open%20for%20everyone-informational)
 
 Caravan intends to be equipped with a fully fledged API for easily creating open source bus protocols in Chisel based designs
