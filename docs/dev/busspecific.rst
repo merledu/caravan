@@ -4,15 +4,15 @@ Bus Specific Implementation
 This guide will cover the bus specific implementations that needs to be done by taking the already implemented
 Wishbone protocol as an example.
 
-Each bus specific protocol should have a `Host Adapter` and a `Device Adapter`. The host behaves like the master of
+Each bus specific protocol should have a *Host Adapter* and a *Device Adapter*. The host behaves like the master of
 the bus while the device acts as the slave of the bus.
 
 In the case of Wishbone implementation, it also has a ``WishboneHost`` adapter and a ``WishboneDevice`` adapter.
 
-Furthermore, each protocol should have a `Master Bundle` that is concerned with the `Host Adapter` and a `Slave Bundle`
-that is concerned with the `Device Adapter`.
+Furthermore, each protocol should have a *Master Bundle* that is concerned with the *Host Adapter* and a *Slave Bundle*
+that is concerned with the *Device Adapter*.
 
-These bundles and adapters can then be parameterized with a common `Config` class that is passed down to each module.
+These bundles and adapters can then be parameterized with a common *Config* class that is passed down to each module.
 
 Wishbone Example
 ----------------
@@ -41,13 +41,13 @@ The ``WishboneConfig`` class is created here: ``main/scala/caravan/bus/wishbone/
     waitState: Boolean = false
     )
 
-This class is then `implicitly` passed down to the different wishbone module in order to parameterize them.
+This class is then *implicitly* passed down to the different wishbone module in order to parameterize them.
 
 Creating the master and slave bundles
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As discussed above, each bus protocol should have a `master bundle` that is concerned with the `host adapter`
-and a `slave bundle` that is concerned with the `device adapter`. These bundles are defined in the following file:
+As discussed above, each bus protocol should have a *master bundle* that is concerned with the *host adapter*
+and a *slave bundle* that is concerned with the *device adapter*. These bundles are defined in the following file:
 ``main/scala/caravan/bus/wishbone/WishboneBus.scala``
 
 .. code-block:: scala
@@ -96,8 +96,8 @@ The ``WBHost`` and ``WBDevice`` then extend them in the Wishbone specific implem
     case class WBHost() extends BusHost
     case class WBDevice() extends BusDevice
 
-The reason for creating this hierarchy is to use `type parameterization` effectively. One example of this is found in
-the implementation of the `1:N Switch` present in ``main/scala/caravan/bus/common/Switch1ToN.scala``
+The reason for creating this hierarchy is to use *type parameterization* effectively. One example of this is found in
+the implementation of the *1:N Switch* present in ``main/scala/caravan/bus/common/Switch1ToN.scala``
 
 Creating the host and device adapters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
