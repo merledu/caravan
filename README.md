@@ -13,7 +13,7 @@ There are fairly limited resources available for the Chisel developers to use pr
 
 ## Getting Started
 It is highy recommended to follow the docs for installation guide and getting started. The documentation is up and running here:
-[caravan.readthedocs.io](caravan.rtfd.io)
+[caravan.readthedocs.io](https://caravan.readthedocs.io/en/latest/index.html)
 
 
 ## Current Status
