@@ -37,6 +37,7 @@ class WishboneSlave(implicit val config: WishboneConfig) extends WBDevice {
    */
   val ack = Bool()
   val dat = UInt(config.dataWidth.W)
+  val err = Bool()
 }
 
 class Request(implicit val config: WishboneConfig) extends AbstrRequest {
