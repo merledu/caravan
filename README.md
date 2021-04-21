@@ -34,7 +34,7 @@ class ParentModule(implicit val config: WishboneConfig) extends Module {
 
 Here is the waveform view of writing a data to a synchronous memory and then reading from the same address:
 
-![wb_read_write](https://github.com/merledu/caravan/blob/main/doc/wb_timing.png)
+![wb_read_write](https://github.com/merledu/caravan/blob/main/docs/wb_timing.png)
 
 To reproduce the above waveform in a VCD format follow the [caravan developer's guide](https://caravan.readthedocs.io/en/latest/dev/index.html)
 
