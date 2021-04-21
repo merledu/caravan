@@ -1,7 +1,8 @@
 Design Fundamentals
 ===================
 
-This guide will go through the design fundamentals and re-usability concepts used in the Caravan framework.
+This guide will go through the design fundamentals, re-usability concepts, and adding support for other bus protocols
+in the Caravan framework.
 
 .. toctree::
    :maxdepth: 2
@@ -9,5 +10,6 @@ This guide will go through the design fundamentals and re-usability concepts use
 
    reqrespbundle
    busspecific
+   custombus
 
 
