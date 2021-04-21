@@ -1,8 +1,14 @@
 package caravan.bus.wishbone
+import caravan.bus.common.{AddressMap, BusDecoder, Switch1toN}
 import chisel3._
 import chisel3.stage.ChiselStage
-import chisel3.util.{Cat, Decoupled}
+import chisel3.util.{Cat, Decoupled, DecoupledIO}
 import chisel3.util.experimental.loadMemoryFromFile
+
+object Peripherals extends Enumeration {
+  type Peripheral = Value
+  val GPIO, UART, DCCM = Value
+}
 
 class Harness(programFile: String)(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
@@ -18,7 +24,25 @@ class Harness(programFile: String)(implicit val config: WishboneConfig) extends 
 
   val wbHost = Module(new WishboneHost())
   val wbSlave = Module(new WishboneDevice())
+//  val wbSlave1 = Module(new WishboneDevice())
+//  val wbSlave2 = Module(new WishboneDevice())
   val memCtrl = Module(new DummyMemController(programFile))
+  //val switch = Module(new Switch1toN[WBHost, WBDevice](new WishboneMaster(), new WishboneSlave(), 4))
+
+//  val addressMap = new AddressMap
+//  addressMap.addDevice(Peripherals.GPIO, "h400000000".U(32.W), "h00000fff".U(32.W))
+//  addressMap.addDevice(Peripherals.UART, "h400010000".U(32.W), "h00000fff".U(32.W))
+//
+//  switch.io.hostIn <> wbHost.io.wbMasterTransmitter
+//  switch.io.hostOut <> wbHost.io.wbSlaveReceiver
+//
+//  switch.io.devSel := BusDecoder.decode(wbHost.io.wbMasterTransmitter.bits.adr, addressMap)
+//
+//  val slaves = List(wbSlave, wbSlave1, wbSlave2)
+//
+//  for (i <- 0 until switch.io.devOut.size) {
+//    switch.io.devOut(i) <> slaves(i).io.wbMasterReceiver
+//  }
 
   wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
