@@ -43,7 +43,13 @@ Running tests
 .. code-block:: bash
 
    cd caravan
-   sbt "testOnly wishbone.HarnessTest"
+   sbt "testOnly wishbone.HarnessTest -- -DmemFile=<memory_file_path>"
+
+.. warning::
+
+    In order to run the test above you need to pass a hex dump ``.txt`` file path with the ``-DmemFile``
+    argument as shown above, which is used to initialize the memory inside the harness.
+    Otherwise the test would not compile and fail.
 
 This would first generate a verilog of the ``Harness`` module and all its child modules, then it will run verilator
 to generate the verilated file, and then it will run the testbench on top of it. To view the emitted verilog file
@@ -53,4 +59,4 @@ To further generate the VCD file for waveform view run the following command:
 
 .. code-block:: bash
 
-   sbt "testOnly wishbone.HarnessTest -- -DwriteVcd=1"
+   sbt "testOnly wishbone.HarnessTest -- -DmemFile=<memory_file_path> -DwriteVcd=1"
