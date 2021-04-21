@@ -11,7 +11,9 @@ import org.scalatest.FreeSpec
 class HarnessTest extends FreeSpec with ChiselScalatestTester {
   "should send a valid request and full word" in {
     implicit val config = WishboneConfig(10, 32)
-    test(new Harness("/Users/mbp/Desktop/mem1.txt")).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(1.U)
@@ -24,7 +26,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should send a valid request and read 1 byte" in {
     implicit val config = WishboneConfig(10, 32)
-    test(new Harness("/Users/mbp/Desktop/mem1.txt")).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(1.U)
@@ -37,7 +41,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should send a valid request and read 2 bytes" in {
     implicit val config = WishboneConfig(10, 32)
-    test(new Harness("/Users/mbp/Desktop/mem1.txt")).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -50,7 +56,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write a full word in memory" in {
     implicit val config = WishboneConfig(10, 32)
-    test(new Harness("/Users/mbp/Desktop/mem1.txt")).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
