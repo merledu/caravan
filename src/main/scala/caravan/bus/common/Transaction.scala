@@ -15,6 +15,7 @@ abstract class AbstrRequest extends Bundle {
 
 abstract class AbstrResponse extends Bundle {
   val dataResponse: UInt
+  val error: Bool
 }
 
 class BusHost extends Bundle
