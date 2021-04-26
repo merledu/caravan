@@ -40,6 +40,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
   // registers used to provide the response to the ip.
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
+  val errReg = RegInit(false.B)
   // state machine to conform to the wishbone protocol of negating stb and cyc when data latched
   val idle :: latch_data :: Nil = Enum(2)
   val stateReg = RegInit(idle)
@@ -101,10 +102,14 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       // making the registers false when ack received so that in the next cycle stb, cyc and other signals get low
       startWBReadTransaction := false.B
       startWBWriteTransaction := false.B
+    } .elsewhen(io.wbSlaveReceiver.bits.err) {
+      dataReg := io.wbSlaveReceiver.bits.dat
+      respReg := true.B
+      errReg := true.B
     }
 
     when(stateReg === idle) {
-      stateReg := Mux(io.wbSlaveReceiver.bits.ack, latch_data, idle)
+      stateReg := Mux(io.wbSlaveReceiver.bits.ack || io.wbSlaveReceiver.bits.err, latch_data, idle)
     } .elsewhen(stateReg === latch_data) {
       respReg := false.B
       stateReg := idle
@@ -114,6 +119,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
      * assuming IP is always ready to accept data from the bus */
     io.rspOut.valid := respReg
     io.rspOut.bits.dataResponse := dataReg
+    io.rspOut.bits.error := errReg
   }
 
 
