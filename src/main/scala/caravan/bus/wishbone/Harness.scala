@@ -228,7 +228,7 @@ object DummyGpioControllerDriver extends App {
 }
 
 object SwitchHarnessDriver extends App {
-  implicit val config = WishboneConfig(10, 32)
+  implicit val config = WishboneConfig(32, 32)
   println((new ChiselStage).emitVerilog(new SwitchHarness("/Users/mbp/Desktop/mem1.txt")))
 }
 
