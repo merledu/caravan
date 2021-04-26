@@ -34,14 +34,14 @@ object BusDecoder {
     // contains which peripheral's addr hit
     val addr_hit = Wire(Vec(addressMap.getMap().size, Bool()))
     // contains the id of the matched peripheral
-    val id = Wire(Vec(addressMap.getMap().size, UInt(log2Ceil(addressMap.getMap().size).W)))
+    val id = Wire(Vec(addressMap.getMap().size, UInt(log2Ceil(addressMap.getMap().size + 1).W)))
 
     /** looping over the map to:
      * 1) assert the appropriate wire of the peripheral with whom the received address matches
      * 2) store the id of that peripheral */
     for (i <- 0 until addressMap.getMap().size) {
-      addr_hit(i) := (addressMap.getMap().toList(i)._2._2 & addr) === addressMap.getMap().toList(i)._2._1
-      id(i) := Mux((addressMap.getMap().toList(i)._2._2 & addr) === addressMap.getMap().toList(i)._2._1,  // condition
+      addr_hit(i) := (~addressMap.getMap().toList(1)._2._2 & addr) === addressMap.getMap().toList(i)._2._1
+      id(i) := Mux((~addressMap.getMap().toList(i)._2._2 & addr) === addressMap.getMap().toList(i)._2._1,  // condition
                     addressMap.getMap.toList(i)._1.asUInt,  // if true
                     addressMap.getMap().size.U)             // if false send the id as the total size which has err module connected
     }
