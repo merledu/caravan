@@ -96,16 +96,19 @@ class WishboneHost(implicit val config: WishboneConfig) extends Module {
       io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
     }
 
-    when(io.wbSlaveReceiver.bits.ack) {
+    when(io.wbSlaveReceiver.bits.ack && !io.wbSlaveReceiver.bits.err) {
       dataReg := io.wbSlaveReceiver.bits.dat
       respReg := true.B
+      errReg := false.B
       // making the registers false when ack received so that in the next cycle stb, cyc and other signals get low
       startWBReadTransaction := false.B
       startWBWriteTransaction := false.B
-    } .elsewhen(io.wbSlaveReceiver.bits.err) {
+    } .elsewhen(io.wbSlaveReceiver.bits.err && !io.wbSlaveReceiver.bits.ack) {
       dataReg := io.wbSlaveReceiver.bits.dat
       respReg := true.B
       errReg := true.B
+      startWBReadTransaction := false.B
+      startWBWriteTransaction := false.B
     }
 
     when(stateReg === idle) {
