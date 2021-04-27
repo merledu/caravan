@@ -9,23 +9,107 @@ import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
 class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
-  "should write 10 to GPIO OUTPUT_EN_REG and read it back" in {
+  "should write to all GPIO registers and read them back" in {
     implicit val config = WishboneConfig(32, 32)
     require(scalaTestContext.value.get.configMap.contains("memFile"))
     val programFile = scalaTestContext.value.get.configMap("memFile")
     test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
-      c.io.valid.poke(true.B)
-      c.io.addrReq.poke("h40001000".U)
-      c.io.dataReq.poke(10.U)
-      c.io.byteLane.poke("b1111".U)
-      c.io.isWrite.poke(true.B)
-      c.clock.step(1)
-      c.io.valid.poke(false.B)
-      c.clock.step(1)
-      c.io.valid.poke(true.B)
-      c.io.isWrite.poke(false.B)
+      sendRequest("h40001000".U, 1.U, "b1111".U, true.B)
+      sendRequest("h40001004".U, 2.U, "b1111".U, true.B)
+      sendRequest("h40001008".U, 3.U, "b1111".U, true.B)
+      sendRequest("h40001000".U, 0.U, "b1111".U, false.B)
+      sendRequest("h40001004".U, 0.U, "b1111".U, false.B)
+      sendRequest("h40001008".U, 0.U, "b1111".U, false.B)
       c.clock.step(10)
+
+      def sendRequest(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
+        c.clock.step(1)
+        c.io.valid.poke(true.B)
+        c.io.addrReq.poke(addr)
+        c.io.dataReq.poke(data)
+        c.io.byteLane.poke(byteLane)
+        c.io.isWrite.poke(isWrite)
+        c.clock.step(1)
+        c.io.valid.poke(false.B)
+        c.clock.step(3)
+      }
     }
   }
+
+  "should write to a false GPIO register and produce error" in {
+    implicit val config = WishboneConfig(32, 32)
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+      c.clock.step(5)
+      sendRequest("h4000100c".U, 1.U, "b1111".U, true.B)
+      c.clock.step(10)
+
+      def sendRequest(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
+        c.clock.step(1)
+        c.io.valid.poke(true.B)
+        c.io.addrReq.poke(addr)
+        c.io.dataReq.poke(data)
+        c.io.byteLane.poke(byteLane)
+        c.io.isWrite.poke(isWrite)
+        c.clock.step(1)
+        c.io.valid.poke(false.B)
+        c.clock.step(3)
+      }
+    }
+  }
+
+  "should write data to multiple rows and read them back from memory" in {
+    implicit val config = WishboneConfig(32, 32)
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+      c.clock.step(5)
+      sendRequestToMem("h40000000".U, "h00100120".U, "b1111".U, true.B)
+      sendRequestToMem("h40000004".U, "h00100124".U, "b1111".U, true.B)
+      sendRequestToMem("h40000008".U, "h00100128".U, "b1111".U, true.B)
+      sendRequestToMem("h40000000".U, 0.U, "b1111".U, false.B)
+      sendRequestToMem("h40000004".U, 0.U, "b1111".U, false.B)
+      sendRequestToMem("h40000008".U, 0.U, "b1111".U, false.B)
+      c.clock.step(10)
+
+      def sendRequestToMem(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
+        c.clock.step(1)
+        c.io.valid.poke(true.B)
+        c.io.addrReq.poke(addr)
+        c.io.dataReq.poke(data)
+        c.io.byteLane.poke(byteLane)
+        c.io.isWrite.poke(isWrite)
+        c.clock.step(1)
+        c.io.valid.poke(false.B)
+        c.clock.step(3)
+      }
+    }
+  }
+
+  "should write to a device that is not in memory map and produce error" in {
+    implicit val config = WishboneConfig(32, 32)
+    require(scalaTestContext.value.get.configMap.contains("memFile"))
+    val programFile = scalaTestContext.value.get.configMap("memFile")
+    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+      c.clock.step(5)
+      sendRequest("h80000000".U, 1.U, "b1111".U, true.B)
+      c.clock.step(10)
+
+      def sendRequest(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
+        c.clock.step(1)
+        c.io.valid.poke(true.B)
+        c.io.addrReq.poke(addr)
+        c.io.dataReq.poke(data)
+        c.io.byteLane.poke(byteLane)
+        c.io.isWrite.poke(isWrite)
+        c.clock.step(1)
+        c.io.valid.poke(false.B)
+        c.clock.step(3)
+      }
+    }
+  }
+
+
 }
