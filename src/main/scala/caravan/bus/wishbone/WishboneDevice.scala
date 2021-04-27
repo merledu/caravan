@@ -21,9 +21,6 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
   /** FIXME: Assuming wishbone slave is always ready to accept ip response data */
   io.rspIn.ready := true.B
 
-  /** always assuming the wishbone device never sends an err signal
-   * it is only used by the WishboneErr module */
-  io.wbSlaveTransmitter.bits.err := false.B
   when(fire()) {
     when(!io.wbMasterReceiver.bits.we) {
       // READ CYCLE
@@ -35,14 +32,21 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
       io.reqOut.bits.dataRequest := DontCare
       io.reqOut.bits.activeByteLane := activeByteLane
       io.reqOut.bits.isWrite := false.B
-      when(io.rspIn.valid) {
+      when(io.rspIn.valid && !io.rspIn.bits.error) {
         /** FIXME: Assuming wishbone master is always ready to accept slave's data response */
         io.wbSlaveTransmitter.valid := true.B
         ack := true.B
+        io.wbSlaveTransmitter.bits.err := false.B
+        io.wbSlaveTransmitter.bits.dat := io.rspIn.bits.dataResponse
+      } .elsewhen(io.rspIn.valid && io.rspIn.bits.error) {
+        io.wbSlaveTransmitter.valid := true.B
+        ack := false.B
+        io.wbSlaveTransmitter.bits.err := true.B
         io.wbSlaveTransmitter.bits.dat := io.rspIn.bits.dataResponse
       } .otherwise {
         io.wbSlaveTransmitter.valid := false.B
         ack := false.B
+        io.wbSlaveTransmitter.bits.err := false.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       }
     } .otherwise {
@@ -52,13 +56,21 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
       io.reqOut.bits.dataRequest := io.wbMasterReceiver.bits.dat
       io.reqOut.bits.activeByteLane := io.wbMasterReceiver.bits.sel
       io.reqOut.bits.isWrite := io.wbMasterReceiver.bits.we
-      when(io.rspIn.valid) {
+      when(io.rspIn.valid && !io.rspIn.bits.error) {
         io.wbSlaveTransmitter.valid := true.B
         ack := true.B
+        io.wbSlaveTransmitter.bits.err := false.B
+        io.wbSlaveTransmitter.bits.dat := DontCare
+      } .elsewhen(io.rspIn.valid && io.rspIn.bits.error) {
+        io.wbSlaveTransmitter.valid := true.B
+        ack := false.B
+        io.wbSlaveTransmitter.bits.err := true.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       } .otherwise {
         io.wbSlaveTransmitter.valid := false.B
         ack := false.B
+        io.wbSlaveTransmitter.bits.err := false.B
+        io.wbSlaveTransmitter.bits.err := false.B
         io.wbSlaveTransmitter.bits.dat := DontCare
       }
 
@@ -73,6 +85,7 @@ class WishboneDevice(implicit val config: WishboneConfig) extends Module {
 
     io.wbSlaveTransmitter.valid := false.B
     ack := false.B
+    io.wbSlaveTransmitter.bits.err := false.B
     io.wbSlaveTransmitter.bits.dat := DontCare
   }
 
