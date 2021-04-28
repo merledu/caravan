@@ -63,21 +63,21 @@ class SwitchHarness(programFile: String)(implicit val config: WishboneConfig) ex
     val errResp = Output(Bool())
   })
 
-  val addressMap = new AddressMap
-  addressMap.addDevice(Peripherals.DCCM, "h40000000".U(32.W), "h00000fff".U(32.W))
-  addressMap.addDevice(Peripherals.GPIO, "h40001000".U(32.W), "h00000fff".U(32.W))
-
-  val devicesNum = addressMap.getMap().size
 
   val host = Module(new WishboneHost())
   val dccmDev = Module(new WishboneDevice())
   val gpioDev = Module(new WishboneDevice())
   val memCtrl = Module(new DummyMemController(programFile))
   val gpioCtrl = Module(new DummyGpioController())
-  val switch = Module(new Switch1toN[WBHost, WBDevice](new WishboneMaster(), new WishboneSlave(), devicesNum))
   val wbErr = Module(new WishboneErr())
 
-  val devices = Seq(dccmDev, gpioDev)
+  val addressMap = new AddressMap
+  addressMap.addDevice(Peripherals.DCCM, "h40000000".U(32.W), "h00000fff".U(32.W), dccmDev)
+  addressMap.addDevice(Peripherals.GPIO, "h40001000".U(32.W), "h00000fff".U(32.W), gpioDev)
+  val devices = addressMap.getDevices
+
+  val switch = Module(new Switch1toN[WBHost, WBDevice](new WishboneMaster(), new WishboneSlave(), devices.size))
+
 
   host.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
   host.io.reqIn.valid := Mux(host.io.reqIn.ready, io.valid, false.B)
@@ -89,13 +89,13 @@ class SwitchHarness(programFile: String)(implicit val config: WishboneConfig) ex
   switch.io.hostIn <> host.io.wbMasterTransmitter
   switch.io.hostOut <> host.io.wbSlaveReceiver
 
-
-  for (i <- 0 until devicesNum) {
-    switch.io.devOut(i) <> devices(i).io.wbMasterReceiver
-    switch.io.devIn(i) <> devices(i).io.wbSlaveTransmitter
+  for (i <- 0 until devices.size) {
+    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.io.wbSlaveTransmitter
+    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.io.wbMasterReceiver
   }
-  switch.io.devOut(devicesNum) <> wbErr.io.wbMasterReceiver
-  switch.io.devIn(devicesNum) <> wbErr.io.wbSlaveTransmitter
+
+  switch.io.devOut(devices.size) <> wbErr.io.wbMasterReceiver
+  switch.io.devIn(devices.size) <> wbErr.io.wbSlaveTransmitter
 
   switch.io.devSel := BusDecoder.decode(host.io.wbMasterTransmitter.bits.adr, addressMap)
   dccmDev.io.reqOut <> memCtrl.io.req
