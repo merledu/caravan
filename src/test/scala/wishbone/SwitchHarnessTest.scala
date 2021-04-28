@@ -16,11 +16,61 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
     test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h40001000".U, 1.U, "b1111".U, true.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
       sendRequest("h40001004".U, 2.U, "b1111".U, true.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
       sendRequest("h40001008".U, 3.U, "b1111".U, true.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
       sendRequest("h40001000".U, 0.U, "b1111".U, false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      println("EXPECTED DATA IS: 1 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
+      c.clock.step(2)
       sendRequest("h40001004".U, 0.U, "b1111".U, false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      println("EXPECTED DATA IS: 2 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
+      c.clock.step(2)
       sendRequest("h40001008".U, 0.U, "b1111".U, false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      println("EXPECTED DATA IS: 3 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
       c.clock.step(10)
 
       def sendRequest(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
@@ -32,7 +82,6 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
         c.io.isWrite.poke(isWrite)
         c.clock.step(1)
         c.io.valid.poke(false.B)
-        c.clock.step(3)
       }
     }
   }
@@ -44,6 +93,9 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
     test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h4000100c".U, 1.U, "b1111".U, true.B)
+      if(c.io.errResp.peek().litToBoolean){
+        println("test is passing")
+      }
       c.clock.step(10)
 
       def sendRequest(addr: UInt, data: UInt, byteLane: UInt, isWrite: Bool): Unit = {
