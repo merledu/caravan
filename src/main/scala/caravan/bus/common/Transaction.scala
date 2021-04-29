@@ -18,5 +18,13 @@ abstract class AbstrResponse extends Bundle {
   val error: Bool
 }
 
+/** The BusHost and BusDevice bundle classes
+ * are common classes that each protocol's
+ * Master and Slave bundles will extend (beneficial for type parameterization) */
 class BusHost extends Bundle
 class BusDevice extends Bundle
+
+/** The HostAdapter and DeviceAdapter is a class from which each host/device adapter
+ * of a specific bus protocol will extend (beneficial for switch) */
+abstract class DeviceAdapter extends Module
+abstract class HostAdapter extends Module
