@@ -1,9 +1,10 @@
 package caravan.bus.wishbone
+import caravan.bus.common.DeviceAdapter
 import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util.Decoupled
 
-class WishboneDevice(implicit val config: WishboneConfig) extends Module {
+class WishboneDevice(implicit val config: WishboneConfig) extends DeviceAdapter {
   val io = IO(new Bundle {
     val wbSlaveTransmitter = Decoupled(new WishboneSlave())
     val wbMasterReceiver = Flipped(Decoupled(new WishboneMaster()))
