@@ -1,4 +1,5 @@
 package caravan.bus.wishbone
+import caravan.bus.common.HostAdapter
 import chisel3._
 import chisel3.experimental.DataMirror
 import chisel3.stage.ChiselStage
@@ -6,7 +7,7 @@ import chisel3.util.{Decoupled, Enum, MuxCase}
 
 
 // Support only for Single READ/WRITE cycles for now
-class WishboneHost(implicit val config: WishboneConfig) extends Module {
+class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
   val io = IO(new Bundle {
     val wbMasterTransmitter = Decoupled(new WishboneMaster())
     val wbSlaveReceiver  = Flipped(Decoupled(new WishboneSlave()))
