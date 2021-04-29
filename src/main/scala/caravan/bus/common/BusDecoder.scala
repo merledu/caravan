@@ -1,6 +1,5 @@
 package caravan.bus.common
-import caravan.bus.wishbone.{Peripherals, WishboneDevice}
-import caravan.bus.wishbone.Peripherals._
+import caravan.bus.wishbone.Peripherals
 
 import scala.collection._
 import chisel3._
@@ -9,21 +8,21 @@ import chisel3.util.{MuxCase, log2Ceil}
 /** creating a type inside object so that it can be easily imported
  * BusMap type provides a short way of mentioning mutable.Map[Peripheral, (UInt, UInt)] everywhere */
 object BusMap {
-  type BusMap = mutable.Map[Peripherals.Type, (UInt, UInt, WishboneDevice)]
+  type BusMap = mutable.Map[Peripherals.Type, (UInt, UInt, DeviceAdapter)]
 }
 
 import BusMap._
 /** This class provides the user an API to define peripherals and their address mapping */
 class AddressMap {
-  private val map: BusMap = mutable.Map[Peripherals.Type, (UInt, UInt, WishboneDevice)]()
+  private val map: BusMap = mutable.Map[Peripherals.Type, (UInt, UInt, DeviceAdapter)]()
   /** addDevice provides the user to add each device to the address map */
   /** FIXME: there is no restriction on adding two peripherals with same base address.
    * logically this should never happen, however user can add two peripherals with same base addresses
    * there is no check for this and would break the code in later steps when we decode the addr of a peripheral */
-  def addDevice(peripheral: Peripherals.Type, baseAddr: UInt, addrMask: UInt, wbDevice: WishboneDevice): Unit = map += (peripheral -> (baseAddr, addrMask, wbDevice))
+  def addDevice(peripheral: Peripherals.Type, baseAddr: UInt, addrMask: UInt, devAdapter: DeviceAdapter): Unit = map += (peripheral -> (baseAddr, addrMask, devAdapter))
   /** an helper function that returns the map [Encapsulation] */
   def getMap(): BusMap = map
-  def getDevices: Seq[(WishboneDevice, Peripherals.Type)] = {
+  def getDevices: Seq[(DeviceAdapter, Peripherals.Type)] = {
     getMap().map(f => (f._2._3, f._1)).toSeq
   }
 }
