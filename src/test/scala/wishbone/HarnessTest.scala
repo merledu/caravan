@@ -9,52 +9,112 @@ import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
 class HarnessTest extends FreeSpec with ChiselScalatestTester {
-  "should send a valid request and full word" in {
+  "should write and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     require(scalaTestContext.value.get.configMap.contains("memFile"))
     val programFile = scalaTestContext.value.get.configMap("memFile")
     test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
-      c.io.addrReq.poke(1.U)
-      c.io.dataReq.poke(0.U)
+      c.io.addrReq.poke(0.U)
+      c.io.dataReq.poke(24.U)
       c.io.byteLane.poke("b1111".U)
-      c.io.isWrite.poke(false.B)
-      c.clock.step(15)
+      c.io.isWrite.poke(true.B)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      c.io.dataResp.expect(24.U)
+      println("EXPECTED DATA IS: 24 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
 
-  "should send a valid request and read 1 byte" in {
+  "should write full word and read first byte" in {
     implicit val config = WishboneConfig(10, 32)
     require(scalaTestContext.value.get.configMap.contains("memFile"))
     val programFile = scalaTestContext.value.get.configMap("memFile")
     test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
-      c.io.addrReq.poke(1.U)
+      c.io.addrReq.poke(0.U)
+      c.io.dataReq.poke("habcdef0f".U)
+      c.io.byteLane.poke("b1111".U)
+      c.io.isWrite.poke(true.B)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
+      c.io.valid.poke(true.B)
+      c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b0001".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(15)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      c.io.dataResp.expect("hf".U)
+      println("EXPECTED DATA IS: " + "hf".U.litValue().toInt + " GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
 
-  "should send a valid request and read 2 bytes" in {
+  "should write full word and read first two bytes" in {
     implicit val config = WishboneConfig(10, 32)
     require(scalaTestContext.value.get.configMap.contains("memFile"))
     val programFile = scalaTestContext.value.get.configMap("memFile")
     test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
+      c.io.valid.poke(true.B)
+      c.io.addrReq.poke(0.U)
+      c.io.dataReq.poke("habcdefbf".U)
+      c.io.byteLane.poke("b1111".U)
+      c.io.isWrite.poke(true.B)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b0011".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(15)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      c.io.dataResp.expect("hefbf".U)
+      println("EXPECTED DATA IS: " + "hefbf".U.litValue().toInt + " GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
 
-  "should write a full word in memory" in {
+  "should write a full word and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     require(scalaTestContext.value.get.configMap.contains("memFile"))
     val programFile = scalaTestContext.value.get.configMap("memFile")
@@ -62,19 +122,35 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
-      c.io.dataReq.poke("habcdef01".U)
+      c.io.dataReq.poke("habcdefbf".U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
-      c.clock.step(2)
-      c.io.valid.poke(false.B)
       c.clock.step(1)
-      // new request
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(15)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now reading expected data")
+      c.io.dataResp.expect("habcdefbf".U)
+      println("EXPECTED DATA IS: " + "habcdefbf".U.litValue().toInt + " GOT " + c.io.dataResp.peek().litValue().toInt.toString)
 
     }
   }
