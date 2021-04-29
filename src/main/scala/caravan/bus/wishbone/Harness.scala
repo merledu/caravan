@@ -1,11 +1,9 @@
 package caravan.bus.wishbone
-import java.math.BigInteger
-
-import caravan.bus.common.{AddressMap, BusDecoder, Switch1toN}
+import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN}
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.ChiselStage
-import chisel3.util.{Cat, Decoupled, DecoupledIO, MuxLookup, log2Ceil}
+import chisel3.util.{Cat, Decoupled}
 import chisel3.util.experimental.loadMemoryFromFile
 
 object Peripherals extends ChiselEnum {
@@ -90,8 +88,8 @@ class SwitchHarness(programFile: String)(implicit val config: WishboneConfig) ex
   switch.io.hostOut <> host.io.wbSlaveReceiver
 
   for (i <- 0 until devices.size) {
-    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.io.wbSlaveTransmitter
-    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.io.wbMasterReceiver
+    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.wbSlaveTransmitter
+    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.wbMasterReceiver
   }
 
   switch.io.devOut(devices.size) <> wbErr.io.wbMasterReceiver
