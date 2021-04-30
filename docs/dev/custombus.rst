@@ -76,12 +76,17 @@ Creating the Host/Device Adapters
 Finally, now it is the time to make a *Host Adapter* or a *Master* of the bus, which usually initiates the bus
 transaction and a *Device Adapter* or *Slave*, which responds to the requests.
 
+.. note::
+
+    It is important to extend these adapters from ``HostAdapter/DeviceAdapter`` rather than a ``Module``.
+    So, in our case ``MyBusHost`` must extend ``HostAdapter`` and ``MyBusDevice`` must extend ``DeviceAdapter``.
+
 The logic of these adapters solely depend on the developer and the bus protocol they are trying to implement. Though
 the interface of the adapters should be somewhat similar as the following:
 
 .. code-block:: scala
 
-    class MyBusHost(implicit val config: MyBusConfig) extends Module {
+    class MyBusHost(implicit val config: MyBusConfig) extends HostAdapter {
         val io = IO(new Bundle {
             val myBusMasterTransmitter = Decoupled(new MyBusMaster())
             val myBusSlaveReceiver  = Flipped(Decoupled(new MyBusSlave()))
@@ -92,7 +97,7 @@ the interface of the adapters should be somewhat similar as the following:
         // protocol specific implementation
     }
 
-    class MyBusDevice(implicit val config: MyBusConfig) extends Module {
+    class MyBusDevice(implicit val config: MyBusConfig) extends DeviceAdapter {
         val io = IO(new Bundle {
             val myBusSlaveTransmitter = Decoupled(new MyBusSlave())
             val myBusMasterReceiver = Flipped(Decoupled(new MyBusMaster()))

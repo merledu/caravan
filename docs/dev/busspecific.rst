@@ -113,7 +113,7 @@ The ``WishboneHost`` adapter is created here: ``main/scala/caravan/bus/wishbone/
 
 .. code-block:: scala
 
-    class WishboneHost(implicit val config: WishboneConfig) extends Module {
+    class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
         val io = IO(new Bundle {
             val wbMasterTransmitter = Decoupled(new WishboneMaster())
             val wbSlaveReceiver  = Flipped(Decoupled(new WishboneSlave()))
@@ -123,6 +123,15 @@ The ``WishboneHost`` adapter is created here: ``main/scala/caravan/bus/wishbone/
 
         // protocol specific logic here
     }
+
+The host is not extended with ``Module`` rather it is extended by ``HostAdapter`` which is an abstract class
+that itself extends ``Module``. This also follows for the ``WishboneDevice`` which extends ``DeviceAdapter``
+rather than ``Module``. These abstract classes are present here: ``main/scala/caravan/bus/common/Transaction.scala``
+
+.. code-block:: scala
+
+    abstract class DeviceAdapter extends Module
+    abstract class HostAdapter extends Module
 
 The implementation details are protocol specific and are not shown here. However, the important thing to note are the
 interfaces. As discussed, the host adapter needs to communicate with the user's IP as well as with the wishbone slave.
@@ -137,7 +146,7 @@ The ``WishboneDevice`` adapter is created here: ``main/scala/caravan/bus/wishbon
 
 .. code-block:: scala
 
-    class WishboneDevice(implicit val config: WishboneConfig) extends Module {
+    class WishboneDevice(implicit val config: WishboneConfig) extends DeviceAdapter {
         val io = IO(new Bundle {
             val wbSlaveTransmitter = Decoupled(new WishboneSlave())
             val wbMasterReceiver = Flipped(Decoupled(new WishboneMaster()))
