@@ -105,8 +105,8 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
 
 class DummyMemController(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
-    val req = Flipped(Decoupled(new Request()))
-    val rsp = Decoupled(new Response())
+    val req = Flipped(Decoupled(new WBRequest()))
+    val rsp = Decoupled(new WBResponse())
   })
   // the register that sends valid along with the data read from memory
   // a register is used so that it synchronizes along with the data that comes after one cycle
@@ -148,8 +148,8 @@ class DummyMemController(programFile: Option[String])(implicit val config: Wishb
 
 class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
-    val req = Flipped(Decoupled(new Request()))
-    val rsp = Decoupled(new Response())
+    val req = Flipped(Decoupled(new WBRequest()))
+    val rsp = Decoupled(new WBResponse())
   })
 
   val addr_wire = io.req.bits.addrRequest

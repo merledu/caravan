@@ -40,14 +40,14 @@ class WishboneSlave(implicit val config: WishboneConfig) extends WBDevice {
   val err = Bool()
 }
 
-class Request(implicit val config: WishboneConfig) extends AbstrRequest {
+class WBRequest(implicit val config: WishboneConfig) extends AbstrRequest {
   override val addrRequest: UInt = UInt(config.addressWidth.W)
   override val dataRequest: UInt = UInt(config.dataWidth.W)
   override val activeByteLane: UInt = UInt((config.dataWidth/config.granularity).W)
   override val isWrite: Bool = Bool()
 }
 
-class Response(implicit val config: WishboneConfig) extends AbstrResponse {
+class WBResponse(implicit val config: WishboneConfig) extends AbstrResponse {
   override val dataResponse: UInt = UInt(config.dataWidth.W)
   override val error: Bool = Bool()
 }

@@ -11,8 +11,8 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
   val io = IO(new Bundle {
     val wbMasterTransmitter = Decoupled(new WishboneMaster())
     val wbSlaveReceiver  = Flipped(Decoupled(new WishboneSlave()))
-    val reqIn = Flipped(Decoupled(new Request()))
-    val rspOut = Decoupled(new Response())
+    val reqIn = Flipped(Decoupled(new WBRequest()))
+    val rspOut = Decoupled(new WBResponse())
   })
 
   def fire(): Bool = io.reqIn.valid && io.wbMasterTransmitter.ready

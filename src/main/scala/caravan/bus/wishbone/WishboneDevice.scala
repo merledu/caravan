@@ -8,8 +8,8 @@ class WishboneDevice(implicit val config: WishboneConfig) extends DeviceAdapter 
   val io = IO(new Bundle {
     val wbSlaveTransmitter = Decoupled(new WishboneSlave())
     val wbMasterReceiver = Flipped(Decoupled(new WishboneMaster()))
-    val reqOut = Decoupled(new Request())
-    val rspIn = Flipped(Decoupled(new Response()))
+    val reqOut = Decoupled(new WBRequest())
+    val rspIn = Flipped(Decoupled(new WBResponse()))
   })
 
   /** fire() is a handy function indicating whenever the master sends a valid request */
