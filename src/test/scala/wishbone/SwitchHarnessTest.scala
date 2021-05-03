@@ -8,12 +8,21 @@ import chiseltest.internal.VerilatorBackendAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
-class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
+trait MemoryDumpFileHelper { self: FreeSpec with ChiselScalatestTester =>
+  def getFile: Option[String] = {
+    if (scalaTestContext.value.get.configMap.contains("memFile")) {
+      Some(scalaTestContext.value.get.configMap("memFile").toString)
+    } else {
+      None
+    }
+  }
+}
+class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
+
   "should write to all GPIO registers and read them back" in {
     implicit val config = WishboneConfig(32, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h40001000".U, 1.U, "b1111".U, true.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
@@ -91,9 +100,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write to a false GPIO register and produce error" in {
     implicit val config = WishboneConfig(32, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h4000100c".U, 1.U, "b1111".U, true.B)
       while(c.io.validResp.peek().litToBoolean != true) {
@@ -121,9 +129,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write data to multiple rows and read them back from memory" in {
     implicit val config = WishboneConfig(32, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequestToMem("h40000000".U, "h00100120".U, "b1111".U, true.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
@@ -200,9 +207,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write to a device that is not in memory map and produce error" in {
     implicit val config = WishboneConfig(32, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new SwitchHarness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h80000000".U, 1.U, "b1111".U, true.B)
       while(c.io.validResp.peek().litToBoolean != true) {

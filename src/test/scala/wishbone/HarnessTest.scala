@@ -8,12 +8,11 @@ import chiseltest.internal.VerilatorBackendAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
-class HarnessTest extends FreeSpec with ChiselScalatestTester {
+class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
   "should write and read full word" in {
     implicit val config = WishboneConfig(10, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new Harness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -36,9 +35,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write full word and read first byte" in {
     implicit val config = WishboneConfig(10, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new Harness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -76,9 +74,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write full word and read first two bytes" in {
     implicit val config = WishboneConfig(10, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new Harness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -116,9 +113,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester {
 
   "should write a full word and read full word" in {
     implicit val config = WishboneConfig(10, 32)
-    require(scalaTestContext.value.get.configMap.contains("memFile"))
-    val programFile = scalaTestContext.value.get.configMap("memFile")
-    test(new Harness(programFile.toString)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    val programFile = getFile
+    test(new Harness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
