@@ -1,4 +1,7 @@
 package caravan.bus.wishbone
+
+import caravan.bus.common.BusConfig
+
 // no tag support
 case class WishboneConfig
 (
@@ -12,5 +15,5 @@ case class WishboneConfig
   dataWidth: Int,
   granularity: Int = 8,
   waitState: Boolean = false
-)
+) extends BusConfig
 

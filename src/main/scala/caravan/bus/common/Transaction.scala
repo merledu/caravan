@@ -28,3 +28,7 @@ class BusDevice extends Bundle
  * of a specific bus protocol will extend (beneficial for switch) */
 abstract class DeviceAdapter extends Module
 abstract class HostAdapter extends Module
+
+// created a trait so that each specific bus protocol
+// can extend from it (beneficial for type paremterization)
+trait BusConfig
