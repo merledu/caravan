@@ -15,14 +15,14 @@ Creating a Configuration Class
 ------------------------------
 
 First of all, a configuration case class is needed that provides certain parameters to be used by the bus implementation
-logic, such as address width, data width, and anything other that is protocol specific.
+logic, such as address width, data width, and anything other that is protocol specific which extends the ``BusConfig`` trait.
 
 .. code-block:: scala
 
     case class MyBusConfig
     (
         // protocol specific requirements
-    )
+    ) extends BusConfig
 
 Implementing the Request/Response Bundle
 ----------------------------------------
@@ -41,6 +41,7 @@ bus adapter with an interface to communicate with the user's IP.
 
     class MyResponse(implicit val config: MyBusConfig) extends AbstrResponse {
         override val dataResponse: UInt = UInt(config.dataWidth.W)
+        override val error: Bool = Bool()
     }
 
 

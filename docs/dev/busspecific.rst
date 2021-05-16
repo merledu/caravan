@@ -39,7 +39,9 @@ The ``WishboneConfig`` class is created here: ``main/scala/caravan/bus/wishbone/
     dataWidth: Int,
     granularity: Int = 8,
     waitState: Boolean = false
-    )
+    ) extends BusConfig
+
+This config class extends the ``BusConfig`` trait that is declared here: ``main/scala/caravan/bus/common/Transaction.scala``
 
 This class is then *implicitly* passed down to the different wishbone module in order to parameterize them.
 
@@ -73,9 +75,11 @@ and a *slave bundle* that is concerned with the *device adapter*. These bundles 
         /**
         * ack ->  indicates a normal termination of bus cycle
         * dat ->  contains the data output from the slave
+        * err ->  indicates an error termination of bus cycle
         */
         val ack = Bool()
         val dat = UInt(config.dataWidth.W)
+        val err = Bool()
     }
 
 Note that these classes do not extend the ``Bundle`` type. This is due to the fact that ``WBHost`` and ``WBDevice``
