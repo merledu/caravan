@@ -36,12 +36,20 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
      */
     io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
   }
-  val startWBReadTransaction = RegInit(false.B)
-  val startWBWriteTransaction = RegInit(false.B)
+  val startWBTransaction = RegInit(false.B)
   // registers used to provide the response to the ip.
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
   val errReg = RegInit(false.B)
+  // new changes added here
+  val stbReg = RegInit(false.B)
+  val cycReg = RegInit(false.B)
+  val weReg = RegInit(false.B)
+  val datReg = RegInit(0.U)
+  val adrReg = RegInit(0.U)
+  val selReg = RegInit(0.U)
+  // new changes ended here
+
   // state machine to conform to the wishbone protocol of negating stb and cyc when data latched
   val idle :: latch_data :: Nil = Enum(2)
   val stateReg = RegInit(idle)
@@ -65,35 +73,32 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
 
     // master is only ready to accept req when any prev req not pending
     io.reqIn.ready := readyReg
-    when(io.reqIn.bits.isWrite === false.B && fire) {
-      startWBReadTransaction := true.B
-    } .elsewhen(io.reqIn.bits.isWrite === true.B && fire) {
-      startWBWriteTransaction := true.B
+    when(io.reqIn.bits.isWrite === false.B && readyReg === true.B && io.reqIn.valid) {
+      startWBTransaction := true.B
+      stbReg := true.B
+      cycReg := true.B
+      weReg := io.reqIn.bits.isWrite
+      adrReg := io.reqIn.bits.addrRequest
+      datReg := 0.U
+      selReg := io.reqIn.bits.activeByteLane
+    } .elsewhen(io.reqIn.bits.isWrite === true.B && readyReg === true.B && io.reqIn.valid) {
+      startWBTransaction := true.B
+      stbReg := true.B
+      cycReg := true.B
+      weReg := io.reqIn.bits.isWrite
+      adrReg := io.reqIn.bits.addrRequest
+      datReg := io.reqIn.bits.dataRequest
+      selReg := io.reqIn.bits.activeByteLane
     }
 
-    when(startWBReadTransaction) {
-      /**
-       * SINGLE READ CYCLE
-       * host asserts adr_o, we_o, sel_o, stb_o and cyc_o
-       */
-      io.wbMasterTransmitter.bits.stb := true.B
-      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
-      io.wbMasterTransmitter.bits.we := io.reqIn.bits.isWrite
-      io.wbMasterTransmitter.bits.adr := io.reqIn.bits.addrRequest
-      io.wbMasterTransmitter.bits.dat := 0.U
-      io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
-    } .elsewhen(startWBWriteTransaction) {
-      /**
-       * SINGLE WRITE CYCLE
-       *
-       */
-      io.wbMasterTransmitter.bits.stb := true.B
-      io.wbMasterTransmitter.bits.cyc := io.wbMasterTransmitter.bits.stb
-      io.wbMasterTransmitter.bits.we := io.reqIn.bits.isWrite
-      io.wbMasterTransmitter.bits.adr := io.reqIn.bits.addrRequest
-      io.wbMasterTransmitter.bits.dat := io.reqIn.bits.dataRequest
-      io.wbMasterTransmitter.bits.sel := io.reqIn.bits.activeByteLane
-    } .otherwise {
+    io.wbMasterTransmitter.bits.stb := stbReg
+    io.wbMasterTransmitter.bits.cyc := cycReg
+    io.wbMasterTransmitter.bits.we := weReg
+    io.wbMasterTransmitter.bits.adr := adrReg
+    io.wbMasterTransmitter.bits.dat := datReg
+    io.wbMasterTransmitter.bits.sel := selReg
+
+    when(!startWBTransaction) {
       io.wbMasterTransmitter.bits.getElements.filter(w => DataMirror.directionOf(w) == ActualDirection.Output).map(_ := 0.U)
     }
 
@@ -101,15 +106,13 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
       dataReg := io.wbSlaveReceiver.bits.dat
       respReg := true.B
       errReg := false.B
-      // making the registers false when ack received so that in the next cycle stb, cyc and other signals get low
-      startWBReadTransaction := false.B
-      startWBWriteTransaction := false.B
+      // making the register false when ack received so that in the next cycle stb, cyc and other signals get low
+      startWBTransaction := false.B
     } .elsewhen(io.wbSlaveReceiver.bits.err && !io.wbSlaveReceiver.bits.ack) {
       dataReg := io.wbSlaveReceiver.bits.dat
       respReg := true.B
       errReg := true.B
-      startWBReadTransaction := false.B
-      startWBWriteTransaction := false.B
+      startWBTransaction := false.B
     }
 
     when(stateReg === idle) {
