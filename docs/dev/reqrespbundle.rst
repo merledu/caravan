@@ -28,7 +28,7 @@ For example here is how the `Wishbone` implementation extends this class in the
 
 .. code-block:: scala
 
-    class Request(implicit val config: WishboneConfig) extends AbstrRequest {
+    class WBRequest(implicit val config: WishboneConfig) extends AbstrRequest {
         override val addrRequest: UInt = UInt(config.addressWidth.W)
         override val dataRequest: UInt = UInt(config.dataWidth.W)
         override val activeByteLane: UInt = UInt((config.dataWidth/config.granularity).W)
@@ -52,7 +52,7 @@ present in ``main/scala/caravan/bus/wishbone/WishboneConfig.scala``
     dataWidth: Int,
     granularity: Int = 8,
     waitState: Boolean = false
-    )
+    ) extends BusConfig
 
 Similarly, the `abstract` response class present here ``main/scala/caravan/bus/common/Transaction.scala`` :
 
@@ -60,13 +60,15 @@ Similarly, the `abstract` response class present here ``main/scala/caravan/bus/c
 
     abstract class AbstrResponse extends Bundle {
         val dataResponse: UInt
+        val error: Bool
     }
 
-is used by the bus protocol specific adapter to send response back to the user's IP or vice versa as shown in the
+is used by the bus protocol specific adapter to send response or error back to the user's IP or vice versa as shown in the
 diagram above. It is concretely implemented by the Wishbone specific implementation here: ``main/scala/caravan/bus/wishbone/WishboneBus.scala``
 
 .. code-block:: scala
 
-    class Response(implicit val config: WishboneConfig) extends AbstrResponse {
+    class WBResponse(implicit val config: WishboneConfig) extends AbstrResponse {
         override val dataResponse: UInt = UInt(config.dataWidth.W)
+        override val error: Bool = Bool()
     }

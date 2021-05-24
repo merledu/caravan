@@ -34,6 +34,7 @@ class WishboneSlave(implicit val config: WishboneConfig) extends WBDevice {
   /**
    * ack ->  indicates a normal termination of bus cycle
    * dat ->  contains the data output from the slave
+   * err ->  indicates an error termination of bus cycle
    */
   val ack = Bool()
   val dat = UInt(config.dataWidth.W)
