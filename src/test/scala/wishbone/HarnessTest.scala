@@ -8,6 +8,8 @@ import chiseltest.internal.VerilatorBackendAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
+import common.MemoryDumpFileHelper // necessary to import
+
 class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
   "should write and read full word" in {
     implicit val config = WishboneConfig(10, 32)

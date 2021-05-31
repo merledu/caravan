@@ -8,15 +8,8 @@ import chiseltest.internal.VerilatorBackendAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
 
-trait MemoryDumpFileHelper { self: FreeSpec with ChiselScalatestTester =>
-  def getFile: Option[String] = {
-    if (scalaTestContext.value.get.configMap.contains("memFile")) {
-      Some(scalaTestContext.value.get.configMap("memFile").toString)
-    } else {
-      None
-    }
-  }
-}
+import common.MemoryDumpFileHelper // necessary to import
+
 class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
 
   "should write to all GPIO registers and read them back" in {
