@@ -15,6 +15,8 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
     io.tlSlaveReceiver.ready := true.B
     io.reqIn.ready := true.B
+
+
     
     io.tlMasterTransmitter.bits.a_opcode := Mux(io.reqIn.bits.isWrite, PutFullData.U, Get.U)
     io.tlMasterTransmitter.bits.a_data := io.reqIn.bits.dataRequest
@@ -22,7 +24,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     io.tlMasterTransmitter.bits.a_param := 0.U
     io.tlMasterTransmitter.bits.a_source := 2.U
     io.tlMasterTransmitter.bits.a_size := 2.U
-    io.tlMasterTransmitter.bits.a_mask := 1.U
+    io.tlMasterTransmitter.bits.a_mask := io.reqIn.bits.activeByteLane
     io.tlMasterTransmitter.bits.a_corrupt := 0.U
     io.tlMasterTransmitter.valid := true.B
 

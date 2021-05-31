@@ -33,7 +33,7 @@ class Harness(programFile: Option[String])(implicit val config: TilelinkConfig) 
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.a.W))
     val dataReq = Input(UInt((config.w * 8).W))
-    val byteLane = Input(UInt(((config.w * 8)/config.granularity).W))
+    val byteLane = Input(UInt(config.w.W))
     val isWrite = Input(Bool())
 
     val validResp = Output(Bool())

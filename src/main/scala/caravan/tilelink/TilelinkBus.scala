@@ -7,7 +7,7 @@ import caravan.bus.common.{AbstrRequest, AbstrResponse, BusDevice, BusHost}
 class TLRequest(implicit val config: TilelinkConfig) extends AbstrRequest {
   override val addrRequest: UInt = UInt(config.a.W)
   override val dataRequest: UInt = UInt((config.w * 8).W)
-  override val activeByteLane: UInt = UInt(((config.w * 8)/config.granularity).W)
+  override val activeByteLane: UInt = UInt(config.w.W)
   override val isWrite: Bool = Bool()
 }
 

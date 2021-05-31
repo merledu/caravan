@@ -15,15 +15,20 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     io.tlMasterReceiver.ready := true.B
     io.rspIn.ready := true.B
 
-    io.tlSlaveTransmitter.bits.d_opcode := Mux(io.tlMasterReceiver.bits.a_opcode === Get.U, AccessAckData.U, AccessAck.U)
-    io.tlSlaveTransmitter.bits.d_data := io.rspIn.bits.dataResponse
-    io.tlSlaveTransmitter.bits.d_param := 0.U
-    io.tlSlaveTransmitter.bits.d_size := io.tlMasterReceiver.bits.a_size
-    io.tlSlaveTransmitter.bits.d_source := io.tlMasterReceiver.bits.a_source
-    io.tlSlaveTransmitter.bits.d_sink := 0.U
-    io.tlSlaveTransmitter.bits.d_denied := 0.U
-    io.tlSlaveTransmitter.bits.d_corrupt := io.rspIn.bits.error
-    io.tlSlaveTransmitter.valid := true.B
+    val stall = Module(new stallUnit)
+
+    stall.io.bundle_in.d_opcode := Mux(io.tlMasterReceiver.bits.a_opcode === Get.U, AccessAckData.U, AccessAck.U)
+    stall.io.bundle_in.d_data := io.rspIn.bits.dataResponse
+    stall.io.bundle_in.d_param := 0.U
+    stall.io.bundle_in.d_size := io.tlMasterReceiver.bits.a_size
+    stall.io.bundle_in.d_source := io.tlMasterReceiver.bits.a_source
+    stall.io.bundle_in.d_sink := 0.U
+    stall.io.bundle_in.d_denied := 0.U
+    stall.io.bundle_in.d_corrupt := io.rspIn.bits.error
+    stall.io.valid_in := true.B
+
+    io.tlSlaveTransmitter.bits := stall.io.bundle_out
+    io.tlSlaveTransmitter.valid := stall.io.valid_out
 
     io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
     io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data

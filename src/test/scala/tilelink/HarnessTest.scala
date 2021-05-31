@@ -29,12 +29,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke(24.U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now reading expected data")
@@ -53,12 +53,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke("habcdef0f".U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now sending new request")
@@ -68,12 +68,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b0001".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now reading expected data")
@@ -92,12 +92,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke("habcdefbf".U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now sending new request")
@@ -107,12 +107,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b0011".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now reading expected data")
@@ -131,12 +131,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke("habcdefbf".U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now sending new request")
@@ -146,12 +146,12 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.dataReq.poke(0.U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(false.B)
-      c.clock.step(1)
+      c.clock.step(2)
       c.io.valid.poke(false.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       while(c.io.validResp.peek().litToBoolean != true) {
         println("wait")
-        c.clock.step(1)
+        c.clock.step(2)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now reading expected data")
