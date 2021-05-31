@@ -21,7 +21,6 @@ case class TilelinkConfig
     val z: Int = 8,
     val o: Int = 32,
     val i: Int = 32,
-    val granularity: Int = 8,
 
 ) extends BusConfig
 
