@@ -1,4 +1,4 @@
-package caravan.bus.tileink
+package caravan.bus.tilelink
 import chisel3._
 import caravan.bus.common.{AbstrRequest, AbstrResponse, BusDevice, BusHost}
 

@@ -1,4 +1,4 @@
-package caravan.bus.tileink
+package caravan.bus.tilelink
 import caravan.bus.common.HostAdapter
 import chisel3._
 import chisel3.experimental.DataMirror

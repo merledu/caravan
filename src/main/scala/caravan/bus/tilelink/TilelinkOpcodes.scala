@@ -1,4 +1,4 @@
-package caravan.bus.tileink
+package caravan.bus.tilelink
 
 trait OpCodes {
     val Get = 4
