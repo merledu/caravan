@@ -1,5 +1,5 @@
 package tilelink
-import caravan.bus.tileink.{Harness, TilelinkConfig}
+import caravan.bus.tilelink.{Harness, TilelinkConfig}
 import chisel3._
 import org.scalatest._
 import chiseltest._
