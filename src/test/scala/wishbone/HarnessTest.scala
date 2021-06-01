@@ -1,5 +1,5 @@
 package wishbone
-import caravan.bus.wishbone.{Harness, WishboneConfig}
+import caravan.bus.wishbone.{Harness, WishboneConfig, WBResponse, WBRequest}
 import chisel3._
 import org.scalatest._
 import chiseltest._

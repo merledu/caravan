@@ -1,5 +1,5 @@
 package caravan.bus.wishbone
-import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN}
+import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController} // imported DummyMemController
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.ChiselStage
@@ -17,6 +17,9 @@ class Harness(programFile: Option[String])(implicit val config: WishboneConfig) 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
   })
+
+  implicit val request = new WBRequest()    // implicit val for REQUEST
+  implicit val response = new WBResponse()  // implicit val for RESPONSE
 
   val wbHost = Module(new WishboneHost())
   val wbSlave = Module(new WishboneDevice())
@@ -56,6 +59,8 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
     val errResp = Output(Bool())
   })
 
+  implicit val request = new WBRequest()
+  implicit val response = new WBResponse()
 
   val host = Module(new WishboneHost())
   val dccmDev = Module(new WishboneDevice())
@@ -103,48 +108,48 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
 
 }
 
-class DummyMemController(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
-  val io = IO(new Bundle {
-    val req = Flipped(Decoupled(new WBRequest()))
-    val rsp = Decoupled(new WBResponse())
-  })
-  // the register that sends valid along with the data read from memory
-  // a register is used so that it synchronizes along with the data that comes after one cycle
-  val validReg = RegInit(false.B)
-  io.rsp.valid := validReg
-  io.rsp.bits.error := false.B   // assuming memory controller would never return an error
-  io.req.ready := true.B // always ready to accept requests from device
-  val mem = SyncReadMem(1024, UInt(32.W))
-  if (programFile.isDefined) {
-    loadMemoryFromFile(mem, programFile.get)
-  }
+// class DummyMemController(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+//   val io = IO(new Bundle {
+//     val req = Flipped(Decoupled(new WBRequest()))
+//     val rsp = Decoupled(new WBResponse())
+//   })
+//   // the register that sends valid along with the data read from memory
+//   // a register is used so that it synchronizes along with the data that comes after one cycle
+//   val validReg = RegInit(false.B)
+//   io.rsp.valid := validReg
+//   io.rsp.bits.error := false.B   // assuming memory controller would never return an error
+//   io.req.ready := true.B // always ready to accept requests from device
+//   val mem = SyncReadMem(1024, UInt(32.W))
+//   if (programFile.isDefined) {
+//     loadMemoryFromFile(mem, programFile.get)
+//   }
 
-  when(io.req.valid && !io.req.bits.isWrite) {
-    when(io.req.bits.activeByteLane === "b0001".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest/4.U)(7,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b0011".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest/4.U)(15,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b0111".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest/4.U)(23,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b1111".U) {
-      io.rsp.bits.dataResponse := mem.read(io.req.bits.addrRequest/4.U)
-      validReg := true.B
-    } .otherwise {
-      io.rsp.bits.dataResponse := DontCare
-      validReg := false.B
-    }
-  } .elsewhen(io.req.valid && io.req.bits.isWrite) {
-    mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest)
-    validReg := true.B
-    io.rsp.bits.dataResponse := DontCare
-  }. otherwise {
-    validReg := false.B
-    io.rsp.bits.dataResponse := DontCare
-  }
-}
+//   when(io.req.valid && !io.req.bits.isWrite) {
+//     when(io.req.bits.activeByteLane === "b0001".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest/4.U)(7,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b0011".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest/4.U)(15,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b0111".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest/4.U)(23,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b1111".U) {
+//       io.rsp.bits.dataResponse := mem.read(io.req.bits.addrRequest/4.U)
+//       validReg := true.B
+//     } .otherwise {
+//       io.rsp.bits.dataResponse := DontCare
+//       validReg := false.B
+//     }
+//   } .elsewhen(io.req.valid && io.req.bits.isWrite) {
+//     mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest)
+//     validReg := true.B
+//     io.rsp.bits.dataResponse := DontCare
+//   }. otherwise {
+//     validReg := false.B
+//     io.rsp.bits.dataResponse := DontCare
+//   }
+// }
 
 class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
