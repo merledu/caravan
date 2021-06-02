@@ -7,7 +7,7 @@ import chisel3.util.experimental.loadMemoryFromFile
 
 
 //implicit parameters for Config, Request and Response
-class DummyMemController(programFile: Option[String])(implicit val config: BusConfig, implicit val request: AbstrRequest, implicit val response: AbstrResponse) extends Module {
+class DummyMemController/*(programFile: Option[String])*/(implicit val config: BusConfig, implicit val request: AbstrRequest, implicit val response: AbstrResponse) extends Module {
     val io = IO(new Bundle {
         val req = Flipped(Decoupled(request))
         val rsp = Decoupled(response)
@@ -22,36 +22,39 @@ class DummyMemController(programFile: Option[String])(implicit val config: BusCo
     // masked memory init
     val mem = SyncReadMem(1024, Vec(4, UInt(8.W)))
 
-    if (programFile.isDefined) {
-        loadMemoryFromFile(mem, programFile.get)
-    }
+    // if (programFile.isDefined) {
+    //     loadMemoryFromFile(mem, programFile.get)
+    // }
 
-    
+    // holds the data in byte vectors read from memory
+    val rData = Wire(Vec(4,UInt(8.W)))
+    // holds the bytes that must be read according to the activeByteLane
+    val data = Wire(Vec(4,UInt(8.W)))
 
     when(io.req.fire() && io.req.bits.isWrite){
 
-        // data is written with mask, by use of Vec[UInt(8.W)]  => Byte-wise
-        mem.write(io.req.bits.addrRequest, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
+        
+        mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
+        rData map (_ := DontCare)
         validReg := true.B
-        io.rsp.bits.dataResponse := io.req.bits.dataRequest
 
     }.elsewhen(io.req.fire() && !io.req.bits.isWrite){
-
-        //TODO: make reading dynamic; what if more than 4 bytes are used !!
-
-        // data is read with mask, sending, either 0s or actiual data of the byte for all 4 bytes.
-        io.rsp.bits.dataResponse := Cat(
-            Mux(io.req.bits.activeByteLane.asBools()(3), mem.read(io.req.bits.addrRequest)(3), 0.U(8.W)),
-            Mux(io.req.bits.activeByteLane.asBools()(2), mem.read(io.req.bits.addrRequest)(2), 0.U(8.W)),
-            Mux(io.req.bits.activeByteLane.asBools()(1), mem.read(io.req.bits.addrRequest)(1), 0.U(8.W)),
-            Mux(io.req.bits.activeByteLane.asBools()(0), mem.read(io.req.bits.addrRequest)(0), 0.U(8.W)),
-        )
+         
+        rData := mem.read(io.req.bits.addrRequest/4.U)
         validReg := true.B
         
     }.otherwise{
-        io.rsp.bits.dataResponse := DontCare
+        
+        rData map (_ := DontCare)
         validReg := false.B
+        
     }
+
+    data := io.req.bits.activeByteLane.asBools zip rData map {
+        case (b:Bool, i:UInt) => Mux(b === true.B, i, 0.U)
+    }
+
+    io.rsp.bits.dataResponse := data.asUInt
 
     
 
