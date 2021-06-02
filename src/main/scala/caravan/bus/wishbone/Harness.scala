@@ -1,12 +1,12 @@
 package caravan.bus.wishbone
-import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN}
+import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController} // imported DummyMemController
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.ChiselStage
 import chisel3.util.{Cat, Decoupled}
 import chisel3.util.experimental.loadMemoryFromFile
 
-class Harness(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+class Harness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -18,9 +18,12 @@ class Harness(programFile: Option[String])(implicit val config: WishboneConfig) 
     val dataResp = Output(UInt(32.W))
   })
 
+  implicit val request = new WBRequest()    // implicit val for REQUEST
+  implicit val response = new WBResponse()  // implicit val for RESPONSE
+
   val wbHost = Module(new WishboneHost())
   val wbSlave = Module(new WishboneDevice())
-  val memCtrl = Module(new DummyMemController(programFile))
+  val memCtrl = Module(new DummyMemController())
 
   wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
@@ -43,7 +46,7 @@ class Harness(programFile: Option[String])(implicit val config: WishboneConfig) 
 
 }
 
-class SwitchHarness(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+class SwitchHarness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -56,11 +59,13 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
     val errResp = Output(Bool())
   })
 
+  implicit val request = new WBRequest()
+  implicit val response = new WBResponse()
 
   val host = Module(new WishboneHost())
   val dccmDev = Module(new WishboneDevice())
   val gpioDev = Module(new WishboneDevice())
-  val memCtrl = Module(new DummyMemController(programFile))
+  val memCtrl = Module(new DummyMemController())
   val gpioCtrl = Module(new DummyGpioController())
   val wbErr = Module(new WishboneErr())
 
@@ -103,48 +108,48 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
 
 }
 
-class DummyMemController(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
-  val io = IO(new Bundle {
-    val req = Flipped(Decoupled(new WBRequest()))
-    val rsp = Decoupled(new WBResponse())
-  })
-  // the register that sends valid along with the data read from memory
-  // a register is used so that it synchronizes along with the data that comes after one cycle
-  val validReg = RegInit(false.B)
-  io.rsp.valid := validReg
-  io.rsp.bits.error := false.B   // assuming memory controller would never return an error
-  io.req.ready := true.B // always ready to accept requests from device
-  val mem = SyncReadMem(1024, UInt(32.W))
-  if (programFile.isDefined) {
-    loadMemoryFromFile(mem, programFile.get)
-  }
+// class DummyMemController(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+//   val io = IO(new Bundle {
+//     val req = Flipped(Decoupled(new WBRequest()))
+//     val rsp = Decoupled(new WBResponse())
+//   })
+//   // the register that sends valid along with the data read from memory
+//   // a register is used so that it synchronizes along with the data that comes after one cycle
+//   val validReg = RegInit(false.B)
+//   io.rsp.valid := validReg
+//   io.rsp.bits.error := false.B   // assuming memory controller would never return an error
+//   io.req.ready := true.B // always ready to accept requests from device
+//   val mem = SyncReadMem(1024, UInt(32.W))
+//   if (programFile.isDefined) {
+//     loadMemoryFromFile(mem, programFile.get)
+//   }
 
-  when(io.req.valid && !io.req.bits.isWrite) {
-    when(io.req.bits.activeByteLane === "b0001".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest/4.U)(7,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b0011".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest/4.U)(15,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b0111".U) {
-      io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest/4.U)(23,0))
-      validReg := true.B
-    } .elsewhen(io.req.bits.activeByteLane === "b1111".U) {
-      io.rsp.bits.dataResponse := mem.read(io.req.bits.addrRequest/4.U)
-      validReg := true.B
-    } .otherwise {
-      io.rsp.bits.dataResponse := DontCare
-      validReg := false.B
-    }
-  } .elsewhen(io.req.valid && io.req.bits.isWrite) {
-    mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest)
-    validReg := true.B
-    io.rsp.bits.dataResponse := DontCare
-  }. otherwise {
-    validReg := false.B
-    io.rsp.bits.dataResponse := DontCare
-  }
-}
+//   when(io.req.valid && !io.req.bits.isWrite) {
+//     when(io.req.bits.activeByteLane === "b0001".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(24.W), mem.read(io.req.bits.addrRequest/4.U)(7,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b0011".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(16.W), mem.read(io.req.bits.addrRequest/4.U)(15,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b0111".U) {
+//       io.rsp.bits.dataResponse := Cat(0.U(8.W), mem.read(io.req.bits.addrRequest/4.U)(23,0))
+//       validReg := true.B
+//     } .elsewhen(io.req.bits.activeByteLane === "b1111".U) {
+//       io.rsp.bits.dataResponse := mem.read(io.req.bits.addrRequest/4.U)
+//       validReg := true.B
+//     } .otherwise {
+//       io.rsp.bits.dataResponse := DontCare
+//       validReg := false.B
+//     }
+//   } .elsewhen(io.req.valid && io.req.bits.isWrite) {
+//     mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest)
+//     validReg := true.B
+//     io.rsp.bits.dataResponse := DontCare
+//   }. otherwise {
+//     validReg := false.B
+//     io.rsp.bits.dataResponse := DontCare
+//   }
+// }
 
 class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
@@ -225,10 +230,10 @@ object DummyGpioControllerDriver extends App {
 
 object SwitchHarnessDriver extends App {
   implicit val config = WishboneConfig(32, 32)
-  println((new ChiselStage).emitVerilog(new SwitchHarness(Some("/Users/mbp/Desktop/mem1.txt"))))
+  println((new ChiselStage).emitVerilog(new SwitchHarness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
 
 object HarnessDriver extends App {
   implicit val config = WishboneConfig(addressWidth = 10, dataWidth = 32)
-  println((new ChiselStage).emitVerilog(new Harness(Some("/Users/mbp/Desktop/mem1.txt"))))
+  println((new ChiselStage).emitVerilog(new Harness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
