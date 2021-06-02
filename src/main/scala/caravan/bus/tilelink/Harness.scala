@@ -7,7 +7,7 @@ import chisel3.util.{Cat, Decoupled, MuxLookup}
 import chisel3.util.experimental.loadMemoryFromFile
 
 
-class Harness(programFile: Option[String])(implicit val config: TilelinkConfig) extends Module {
+class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.a.W))
@@ -24,7 +24,7 @@ class Harness(programFile: Option[String])(implicit val config: TilelinkConfig) 
 
   val tlHost = Module(new TilelinkHost())
   val tlSlave = Module(new TilelinkDevice())
-  val memCtrl = Module(new DummyMemController(programFile))
+  val memCtrl = Module(new DummyMemController())
 
   tlHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 

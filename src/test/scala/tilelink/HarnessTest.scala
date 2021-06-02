@@ -14,8 +14,8 @@ import common.MemoryDumpFileHelper // necessary to import
 class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
   "should write and read full word" in {
     implicit val config = TilelinkConfig()
-    val programFile = getFile
-    test(new Harness(getFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -38,8 +38,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
 
   "should write full word and read first byte" in {
     implicit val config = TilelinkConfig()
-    val programFile = getFile
-    test(new Harness(getFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -77,8 +77,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
 
   "should write full word and read first two bytes" in {
     implicit val config = TilelinkConfig()
-    val programFile = getFile
-    test(new Harness(getFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -116,8 +116,8 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
 
   "should write a full word and read full word" in {
     implicit val config = TilelinkConfig()
-    val programFile = getFile
-    test(new Harness(getFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)

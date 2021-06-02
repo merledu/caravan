@@ -14,8 +14,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
 
   "should write to all GPIO registers and read them back" in {
     implicit val config = WishboneConfig(32, 32)
-    val programFile = getFile
-    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h40001000".U, 1.U, "b1111".U, true.B)
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
@@ -93,8 +93,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
 
   "should write to a false GPIO register and produce error" in {
     implicit val config = WishboneConfig(32, 32)
-    val programFile = getFile
-    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h4000100c".U, 1.U, "b1111".U, true.B)
       while(c.io.validResp.peek().litToBoolean != true) {
@@ -200,8 +200,8 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
 
   "should write to a device that is not in memory map and produce error" in {
     implicit val config = WishboneConfig(32, 32)
-    val programFile = getFile
-    test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    // val programFile = getFile
+    test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       sendRequest("h80000000".U, 1.U, "b1111".U, true.B)
       while(c.io.validResp.peek().litToBoolean != true) {

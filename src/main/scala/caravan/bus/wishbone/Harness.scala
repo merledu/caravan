@@ -6,7 +6,7 @@ import chisel3.stage.ChiselStage
 import chisel3.util.{Cat, Decoupled}
 import chisel3.util.experimental.loadMemoryFromFile
 
-class Harness(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+class Harness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -23,7 +23,7 @@ class Harness(programFile: Option[String])(implicit val config: WishboneConfig) 
 
   val wbHost = Module(new WishboneHost())
   val wbSlave = Module(new WishboneDevice())
-  val memCtrl = Module(new DummyMemController(programFile))
+  val memCtrl = Module(new DummyMemController())
 
   wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
@@ -46,7 +46,7 @@ class Harness(programFile: Option[String])(implicit val config: WishboneConfig) 
 
 }
 
-class SwitchHarness(programFile: Option[String])(implicit val config: WishboneConfig) extends Module {
+class SwitchHarness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -65,7 +65,7 @@ class SwitchHarness(programFile: Option[String])(implicit val config: WishboneCo
   val host = Module(new WishboneHost())
   val dccmDev = Module(new WishboneDevice())
   val gpioDev = Module(new WishboneDevice())
-  val memCtrl = Module(new DummyMemController(programFile))
+  val memCtrl = Module(new DummyMemController())
   val gpioCtrl = Module(new DummyGpioController())
   val wbErr = Module(new WishboneErr())
 
@@ -230,10 +230,10 @@ object DummyGpioControllerDriver extends App {
 
 object SwitchHarnessDriver extends App {
   implicit val config = WishboneConfig(32, 32)
-  println((new ChiselStage).emitVerilog(new SwitchHarness(Some("/Users/mbp/Desktop/mem1.txt"))))
+  println((new ChiselStage).emitVerilog(new SwitchHarness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
 
 object HarnessDriver extends App {
   implicit val config = WishboneConfig(addressWidth = 10, dataWidth = 32)
-  println((new ChiselStage).emitVerilog(new Harness(Some("/Users/mbp/Desktop/mem1.txt"))))
+  println((new ChiselStage).emitVerilog(new Harness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
