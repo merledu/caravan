@@ -28,14 +28,14 @@ class DummyMemController(programFile: Option[String])(implicit val config: BusCo
 
     
 
-    when(io.req.bits.isWrite){
+    when(io.req.fire() && io.req.bits.isWrite){
 
         // data is written with mask, by use of Vec[UInt(8.W)]  => Byte-wise
         mem.write(io.req.bits.addrRequest, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
         validReg := true.B
         io.rsp.bits.dataResponse := io.req.bits.dataRequest
 
-    }.otherwise{
+    }.elsewhen(io.req.fire() && !io.req.bits.isWrite){
 
         //TODO: make reading dynamic; what if more than 4 bytes are used !!
 
@@ -48,6 +48,9 @@ class DummyMemController(programFile: Option[String])(implicit val config: BusCo
         )
         validReg := true.B
         
+    }.otherwise{
+        io.rsp.bits.dataResponse := DontCare
+        validReg := false.B
     }
 
     
