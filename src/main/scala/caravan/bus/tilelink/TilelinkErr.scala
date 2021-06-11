@@ -51,7 +51,7 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
   io.tlSlaveTransmitter.bits.d_opcode := opCodeReg
   io.tlSlaveTransmitter.bits.d_param := paramReg
   io.tlSlaveTransmitter.bits.d_size := sizeReg
-  io.tlSlaveTransmitter.bits.d_source := io.tlMasterReceiver.bits.a_source
+  io.tlSlaveTransmitter.bits.d_source := paramReg // TODO: Add dynamic logic for source
   io.tlSlaveTransmitter.bits.d_sink := paramReg
 
 }
