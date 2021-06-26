@@ -15,11 +15,12 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
     def fire(): Bool = io.reqIn.valid && io.tlMasterTransmitter.ready
 
+    //FSM for indicating valid response only when the response comes.
     val idle :: latch_data :: Nil = Enum(2)
     val stateReg = RegInit(idle)
     val respReg = RegInit(false.B)
-
     val readyReg = RegInit(true.B)
+
     when(fire) {
         readyReg := false.B
     }
@@ -48,7 +49,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         io.tlMasterTransmitter.valid := io.reqIn.valid
 
     } otherwise {
-        io.tlMasterTransmitter.bits.a_opcode := 2.U
+        io.tlMasterTransmitter.bits.a_opcode := 2.U         // 2 is used for DontCare
         io.tlMasterTransmitter.bits.a_data := DontCare
         io.tlMasterTransmitter.bits.a_address := DontCare
         io.tlMasterTransmitter.bits.a_param := DontCare
@@ -59,10 +60,8 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         io.tlMasterTransmitter.valid := false.B
     }
 
-    // when()
-
+    // response is valid when either acknowledment or error is coming back.
     respReg := MuxCase(false.B,Array(
-        
         ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> true.B,
         (io.tlSlaveReceiver.bits.d_denied & io.tlSlaveReceiver.valid) -> true.B,
     ))
@@ -76,13 +75,14 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             idle
         )
     }.elsewhen(stateReg === latch_data){
-        respReg := false.B
+        respReg := false.B                  // response is invalid for idle state
         stateReg := idle
     }
     
 
 
-    io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data
+    // only valid resp is Reg'ed because data and error are coming from device after being stalled already.
+    io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
     io.rspOut.bits.error := io.tlSlaveReceiver.bits.d_denied
     io.rspOut.valid := respReg
     

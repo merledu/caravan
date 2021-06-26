@@ -19,7 +19,7 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
   val paramReg = RegInit(0.U)
   val sizeReg = RegInit(io.tlMasterReceiver.bits.a_size)
 
-  /** FIXME: Assuming wishbone slave is always ready to accept master req */
+  /** FIXME: Assuming tilelink slave is always ready to accept master req */
   io.tlMasterReceiver.ready := true.B
 
   when(io.tlMasterReceiver.fire()) {

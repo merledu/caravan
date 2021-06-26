@@ -20,13 +20,19 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
 
     // Sending Response coming from Memory in the STALL to delay the response one cycle
-    stall.io.bundle_in.d_opcode := Mux(io.rspIn.bits.error, 2.U, Mux(io.tlMasterReceiver.bits.a_opcode === Get.U, AccessAckData.U, Mux(io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U, AccessAck.U, 2.U)))
+    stall.io.bundle_in.d_opcode := Mux(io.rspIn.bits.error,     // if mem gives error, opcode is DontCare (i.e 2)
+                                        2.U,
+                                        Mux(io.tlMasterReceiver.bits.a_opcode === Get.U,
+                                            AccessAckData.U,
+                                            Mux(io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U,
+                                                AccessAck.U,
+                                                2.U)))
     stall.io.bundle_in.d_data := io.rspIn.bits.dataResponse
     stall.io.bundle_in.d_param := 0.U
     stall.io.bundle_in.d_size := io.tlMasterReceiver.bits.a_size
     stall.io.bundle_in.d_source := io.tlMasterReceiver.bits.a_source
     stall.io.bundle_in.d_sink := 0.U
-    stall.io.bundle_in.d_denied := io.rspIn.bits.error
+    stall.io.bundle_in.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
     stall.io.bundle_in.d_corrupt := 0.U
     stall.io.valid_in := io.rspIn.valid
 
