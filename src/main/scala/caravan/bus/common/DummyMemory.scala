@@ -54,6 +54,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
         case (b:Bool, i:UInt) => Mux(b === true.B, i, 0.U)
     }
 
+    io.rsp.valid := validReg
     io.rsp.bits.dataResponse := data.asUInt
 
     
