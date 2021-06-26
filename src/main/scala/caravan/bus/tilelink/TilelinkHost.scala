@@ -17,9 +17,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
     val idle :: latch_data :: Nil = Enum(2)
     val stateReg = RegInit(idle)
-    val dataReg = RegInit(0.U((config.w * 8).W))
     val respReg = RegInit(false.B)
-    val errReg = RegInit(false.B)
 
     val readyReg = RegInit(true.B)
     when(fire) {
@@ -64,17 +62,11 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     // when()
 
     respReg := MuxCase(false.B,Array(
+        
         ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> true.B,
-        (io.tlSlaveReceiver.bits.d_denied && !(io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) ) -> true.B,
+        (io.tlSlaveReceiver.bits.d_denied & io.tlSlaveReceiver.valid) -> true.B,
     ))
-    dataReg := MuxCase(false.B,Array(
-        ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> io.tlSlaveReceiver.bits.d_data,
-        (io.tlSlaveReceiver.bits.d_denied && !(io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U))  -> io.tlSlaveReceiver.bits.d_data,
-    ))
-    errReg := MuxCase(false.B,Array(
-        ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> false.B,
-        (io.tlSlaveReceiver.bits.d_denied && !(io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U))  -> true.B,
-    ))
+    
 
     when(stateReg === idle){
         stateReg := Mux(
@@ -87,6 +79,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         respReg := false.B
         stateReg := idle
     }
+    
 
 
     io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data
