@@ -28,10 +28,10 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
     // for reads we are going to signal an err out and send all FFFs.
     errReg := true.B
     validReg := true.B
-    when(io.tlMasterReceiver.bits.a_opcode =/= Get.U) {
+    when(io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U) {
       // WRITE
       dataReg := DontCare
-    } .otherwise {
+    } .elsewhen(io.tlMasterReceiver.bits.a_opcode === Get.U) {
       // READ
       dataReg := Fill((config.w * 8)/4, "hf".U)
     }
@@ -44,7 +44,7 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
   }
 
   io.tlSlaveTransmitter.valid := validReg
-  io.tlSlaveTransmitter.bits.d_denied := ackReg
+  io.tlSlaveTransmitter.bits.d_denied := errReg
   io.tlSlaveTransmitter.bits.d_data := dataReg
   io.tlSlaveTransmitter.bits.d_corrupt := errReg
 
