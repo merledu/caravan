@@ -1,5 +1,5 @@
 package caravan.bus.common
-import caravan.bus.wishbone.Peripherals
+// import caravan.bus.wishbone.Peripherals
 
 import scala.collection._
 import chisel3._
