@@ -27,7 +27,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   val gpioDev = Module(new TilelinkDevice())
   val memCtrl = Module(new DummyMemController())
   val gpioCtrl = Module(new DummyGpioController())
-  val tlErr = Module(new TilelinkErr())
+  val tlErr = Module(new TilelinkError())
 
   val addressMap = new AddressMap
   addressMap.addDevice(Peripherals.DCCM, "h40000000".U(32.W), "h00000fff".U(32.W), dccmDev)

@@ -3,7 +3,7 @@ import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util.{Decoupled, Fill}
 
-class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCodes {
+class TilelinkError(implicit val config: TilelinkConfig) extends Module {
   val io = IO(new Bundle {
     val tlSlaveTransmitter = Decoupled(new TilelinkSlave())
     val tlMasterReceiver = Flipped(Decoupled(new TilelinkMaster()))
@@ -15,7 +15,7 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
   val dataReg = RegInit(0.U)
   val errReg = RegInit(false.B)
   val validReg = RegInit(false.B)
-  val opCodeReg = RegInit(Mux(io.tlMasterReceiver.bits.a_opcode === Get.U, AccessAckData.U, AccessAck.U))
+  val opCodeReg = RegInit(Mux(io.tlMasterReceiver.bits.a_opcode === 4.U, 1.U, 0.U))
   val paramReg = RegInit(0.U)
   val sizeReg = RegInit(io.tlMasterReceiver.bits.a_size)
 
@@ -28,10 +28,10 @@ class TilelinkErr(implicit val config: TilelinkConfig) extends Module with OpCod
     // for reads we are going to signal an err out and send all FFFs.
     errReg := true.B
     validReg := true.B
-    when(io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U) {
+    when(io.tlMasterReceiver.bits.a_opcode === 0.U || io.tlMasterReceiver.bits.a_opcode === 1.U) {
       // WRITE
       dataReg := DontCare
-    } .elsewhen(io.tlMasterReceiver.bits.a_opcode === Get.U) {
+    } .elsewhen(io.tlMasterReceiver.bits.a_opcode === 4.U) {
       // READ
       dataReg := Fill((config.w * 8)/4, "hf".U)
     }
