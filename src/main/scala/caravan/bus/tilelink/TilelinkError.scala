@@ -2,8 +2,10 @@ package caravan.bus.tilelink
 import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util.{Decoupled, Fill}
+// import caravan.bus.common.DeviceAdapter
 
-class TilelinkError(implicit val config: TilelinkConfig) extends Module {
+abstract class TLErr extends Module
+class TilelinkError(implicit val config: TilelinkConfig) extends TLErr {
   val io = IO(new Bundle {
     val tlSlaveTransmitter = Decoupled(new TilelinkSlave())
     val tlMasterReceiver = Flipped(Decoupled(new TilelinkMaster()))
@@ -56,7 +58,8 @@ class TilelinkError(implicit val config: TilelinkConfig) extends Module {
 
 }
 
-// object WishboneErrDriver extends App {
-//   implicit val config = WishboneConfig(10, 32)
-//   println((new ChiselStage).emitVerilog(new WishboneErr()))
+// object TilelinkErrDriver extends App {
+//   implicit val config = TilelinkConfig()
+//   println("-------------------------------- -------- ------------ -------------------")
+//   println((new ChiselStage).emitVerilog(new TilelinkError()))
 // }
