@@ -16,7 +16,7 @@ class TilelinkAdapter(implicit val config:TilelinkConfig) extends Module {
     })
 
     val tlHost = Module(new TilelinkHost)
-    val tlSlave = Module(new TilelinkSlave)
+    val tlSlave = Module(new TilelinkDevice)
 
     /*  Connecting Master Interconnects  */
     tlHost.io.tlMasterTransmitter <> tlSlave.io.tlMasterReceiver

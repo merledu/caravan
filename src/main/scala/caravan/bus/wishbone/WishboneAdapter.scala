@@ -1,7 +1,8 @@
-package caravan.bus.wishbone
+package components
 
 import chisel3._ 
 import chisel3.util._
+import caravan.bus.wishbone._
 
 class WishboneAdapter(implicit val config:WishboneConfig) extends Module {
     val io = IO(new Bundle{
@@ -16,13 +17,13 @@ class WishboneAdapter(implicit val config:WishboneConfig) extends Module {
     })
 
     val wbHost = Module(new WishboneHost)
-    val wbSlave = Module(new WishboneSlave)
+    val wbSlave = Module(new WishboneDevice)
 
     /*  Connecting Master Interconnects  */
     wbHost.io.wbMasterTransmitter <> wbSlave.io.wbMasterReceiver
 
     /*  Connecting Slave Interconnects  */
-    tlSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
+    wbSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
 
     /*  Sending Request in Master  */
     wbHost.io.reqIn <> io.reqIn
