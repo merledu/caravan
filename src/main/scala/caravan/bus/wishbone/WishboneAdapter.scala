@@ -1,4 +1,4 @@
-package components
+package caravan.bus.wishbone
 
 import chisel3._ 
 import chisel3.util._
