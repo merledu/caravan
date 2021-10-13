@@ -16,6 +16,7 @@ abstract class AbstrRequest extends Bundle {
 abstract class AbstrResponse extends Bundle {
   val dataResponse: UInt
   val error: Bool
+  val ackWrite: Bool
 }
 
 /** The BusHost and BusDevice bundle classes
