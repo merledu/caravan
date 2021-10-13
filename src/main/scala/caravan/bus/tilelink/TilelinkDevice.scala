@@ -20,13 +20,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
 
     // Sending Response coming from Memory in the STALL to delay the response one cycle
-    stall.io.bundle_in.d_opcode := Mux(io.rspIn.bits.error,     // if mem gives error, opcode is DontCare (i.e 2)
-                                        2.U,
-                                        Mux(io.tlMasterReceiver.bits.a_opcode === Get.U,
-                                            AccessAckData.U,
-                                            Mux(io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U,
-                                                AccessAck.U,
-                                                2.U)))
+    stall.io.bundle_in.d_opcode := Mux(io.rspIn.bits.ackWrite, AccessAckData.U, AccessAck.U)
     stall.io.bundle_in.d_data := io.rspIn.bits.dataResponse
     stall.io.bundle_in.d_param := 0.U
     stall.io.bundle_in.d_size := io.tlMasterReceiver.bits.a_size

@@ -14,6 +14,7 @@ class TLRequest(implicit val config: TilelinkConfig) extends AbstrRequest {
 class TLResponse(implicit val config: TilelinkConfig) extends AbstrResponse {
   override val dataResponse: UInt = UInt((config.w * 8).W)
   override val error: Bool = Bool()
+  override val ackWrite: Bool = Bool() 
 }
 
 // channel A -- Request Channel
