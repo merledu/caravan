@@ -16,24 +16,24 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     def fire(): Bool = io.reqIn.valid && io.tlMasterTransmitter.ready
 
     //FSM for indicating valid response only when the response comes.
-    val idle :: latch_data :: Nil = Enum(2)
-    val stateReg = RegInit(idle)
-    val respReg = RegInit(false.B)
-    val readyReg = RegInit(true.B)
+    // val idle :: latch_data :: Nil = Enum(2)
+    // val stateReg = RegInit(idle)
+    // val respReg = RegInit(false.B)
+    // val readyReg = RegInit(true.B)
 
-    when(fire) {
-        readyReg := false.B
-    }
-    when(stateReg === latch_data) {
-        readyReg := true.B
-    }
+    // when(fire) {
+    //     readyReg := false.B
+    // }
+    // when(stateReg === latch_data) {
+    //     readyReg := true.B
+    // }
 
     io.tlSlaveReceiver.ready := true.B
-    io.reqIn.ready := readyReg
+    io.reqIn.ready := true.B
 
 
-    when(io.reqIn.valid){
-        io.tlMasterTransmitter.bits.a_opcode := Mux(readyReg, Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U), 2.U)
+    // when(io.reqIn.valid){
+        io.tlMasterTransmitter.bits.a_opcode := /*Mux(readyReg,*/ Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)/*, 2.U)*/
         io.tlMasterTransmitter.bits.a_data := io.reqIn.bits.dataRequest
         io.tlMasterTransmitter.bits.a_address := io.reqIn.bits.addrRequest
         io.tlMasterTransmitter.bits.a_param := 0.U
@@ -48,43 +48,44 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         io.tlMasterTransmitter.bits.a_corrupt := false.B
         io.tlMasterTransmitter.valid := io.reqIn.valid
 
-    } otherwise {
-        io.tlMasterTransmitter.bits.a_opcode := 2.U         // 2 is used for DontCare
-        io.tlMasterTransmitter.bits.a_data := DontCare
-        io.tlMasterTransmitter.bits.a_address := DontCare
-        io.tlMasterTransmitter.bits.a_param := DontCare
-        io.tlMasterTransmitter.bits.a_source := DontCare
-        io.tlMasterTransmitter.bits.a_size := DontCare
-        io.tlMasterTransmitter.bits.a_mask := DontCare
-        io.tlMasterTransmitter.bits.a_corrupt := DontCare
-        io.tlMasterTransmitter.valid := false.B
-    }
+    // } otherwise {
+    //     io.tlMasterTransmitter.bits.a_opcode := 2.U         // 2 is used for DontCare
+    //     io.tlMasterTransmitter.bits.a_data := DontCare
+    //     io.tlMasterTransmitter.bits.a_address := DontCare
+    //     io.tlMasterTransmitter.bits.a_param := DontCare
+    //     io.tlMasterTransmitter.bits.a_source := DontCare
+    //     io.tlMasterTransmitter.bits.a_size := DontCare
+    //     io.tlMasterTransmitter.bits.a_mask := DontCare
+    //     io.tlMasterTransmitter.bits.a_corrupt := DontCare
+    //     io.tlMasterTransmitter.valid := false.B
+    // }
 
     // response is valid when either acknowledment or error is coming back.
-    respReg := MuxCase(false.B,Array(
-        ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> true.B,
-        (io.tlSlaveReceiver.bits.d_denied & io.tlSlaveReceiver.valid) -> true.B,
-    ))
+    // respReg := MuxCase(false.B,Array(
+    //     ((io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U) && !io.tlSlaveReceiver.bits.d_denied) -> true.B,
+    //     (io.tlSlaveReceiver.bits.d_denied & io.tlSlaveReceiver.valid) -> true.B,
+    // ))
     
 
-    when(stateReg === idle){
-        stateReg := Mux(
-            (io.tlSlaveReceiver.bits.d_denied |
-            (io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U)),
-            latch_data,
-            idle
-        )
-    }.elsewhen(stateReg === latch_data){
-        respReg := false.B                  // response is invalid for idle state
-        stateReg := idle
-    }
+    // when(stateReg === idle){
+    //     stateReg := Mux(
+    //         (io.tlSlaveReceiver.bits.d_denied |
+    //         (io.tlSlaveReceiver.bits.d_opcode === AccessAck.U || io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U)),
+    //         latch_data,
+    //         idle
+    //     )
+    // }.elsewhen(stateReg === latch_data){
+    //     respReg := false.B                  // response is invalid for idle state
+    //     stateReg := idle
+    // }
     
 
 
     // only valid resp is Reg'ed because data and error are coming from device after being stalled already.
     io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
     io.rspOut.bits.error := io.tlSlaveReceiver.bits.d_denied
-    io.rspOut.valid := respReg
+    io.rspOut.bits.ackWrite := io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U
+    io.rspOut.valid := io.tlSlaveReceiver.valid
     
 
 
