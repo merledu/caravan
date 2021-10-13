@@ -57,6 +57,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Wishbo
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
     val errResp = Output(Bool())
+    val ackResp = Output(Bool())
   })
 
   implicit val request = new WBRequest()
@@ -105,6 +106,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Wishbo
   io.dataResp := host.io.rspOut.bits.dataResponse
   io.validResp := host.io.rspOut.valid
   io.errResp := host.io.rspOut.bits.error
+  io.ackResp := host.io.rspOut.bits.ackWrite
 
 }
 
@@ -162,6 +164,7 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val err_rsp_wire = WireInit(false.B)
   val data_rsp_wire = Wire(UInt(config.dataWidth.W))
   val valid_rsp_wire = WireInit(false.B)
+  // val 
 
   data_rsp_wire := DontCare
 
