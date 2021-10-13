@@ -17,6 +17,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
     val errResp = Output(Bool())
+    val ackResp = Output(Bool())
   })
 
   implicit val request = new TLRequest()
@@ -65,6 +66,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   io.dataResp := host.io.rspOut.bits.dataResponse
   io.validResp := host.io.rspOut.valid
   io.errResp := host.io.rspOut.bits.error
+  io.ackResp := host.io.rspOut.bits.ackWrite
 
 }
 
@@ -80,12 +82,14 @@ class DummyGpioController(implicit val config: TilelinkConfig) extends Module {
   val err_rsp_wire = WireInit(false.B)
   val data_rsp_wire = Wire(UInt((config.w * 8).W))
   val valid_rsp_wire = WireInit(false.B)
+  val ack_rsp_wire = WireInit(false.B)
 
   data_rsp_wire := DontCare
 
   val errReg = RegInit(false.B)
   val dataReg = RegInit(0.U((config.w * 8).W))
   val validReg = RegInit(false.B)
+  val ackReg = RegInit(false.B)
 
   object GpioRegisters extends ChiselEnum {
     val OUTPUT_EN_REG = Value(0.U)
@@ -110,6 +114,7 @@ class DummyGpioController(implicit val config: TilelinkConfig) extends Module {
 
   when(io.req.fire() && io.req.bits.isWrite) {
     // WRITE
+    ack_rsp_wire := true.B
     valid_rsp_wire := true.B
     when(isRegisterFound(offset)) {
       // correct address for a register found
@@ -121,6 +126,7 @@ class DummyGpioController(implicit val config: TilelinkConfig) extends Module {
     }
   } .elsewhen(io.req.fire() && !io.req.bits.isWrite) {
     // READ
+    ack_rsp_wire := false.B
     valid_rsp_wire := true.B
     when(isRegisterFound(offset)) {
       val accessed_reg = registers(offset/4.U)
@@ -134,9 +140,11 @@ class DummyGpioController(implicit val config: TilelinkConfig) extends Module {
   validReg := valid_rsp_wire
   errReg := err_rsp_wire
   dataReg := data_rsp_wire
+  ackReg := ack_rsp_wire
 
   io.rsp.valid := validReg
   io.rsp.bits.error := errReg
   io.rsp.bits.dataResponse := dataReg
+  io.rsp.bits.ackWrite := ackReg
 
 }

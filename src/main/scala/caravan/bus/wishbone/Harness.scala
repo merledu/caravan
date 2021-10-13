@@ -164,6 +164,7 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val err_rsp_wire = WireInit(false.B)
   val data_rsp_wire = Wire(UInt(config.dataWidth.W))
   val valid_rsp_wire = WireInit(false.B)
+  val ack_rsp_wire = WireInit(false.B)
   // val 
 
   data_rsp_wire := DontCare
@@ -171,6 +172,7 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   val errReg = RegInit(false.B)
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val validReg = RegInit(false.B)
+  val ackReg = RegInit(false.B)
 
   object GpioRegisters extends ChiselEnum {
     val OUTPUT_EN_REG = Value(0.U)
@@ -195,6 +197,7 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
 
   when(io.req.fire() && io.req.bits.isWrite) {
     // WRITE
+    ack_rsp_wire := true.B
     valid_rsp_wire := true.B
     when(isRegisterFound(offset)) {
       // correct address for a register found
@@ -206,6 +209,7 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
     }
   } .elsewhen(io.req.fire() && !io.req.bits.isWrite) {
     // READ
+    ack_rsp_wire := false.B
     valid_rsp_wire := true.B
     when(isRegisterFound(offset)) {
       val accessed_reg = registers(offset/4.U)
@@ -219,10 +223,12 @@ class DummyGpioController(implicit val config: WishboneConfig) extends Module {
   validReg := valid_rsp_wire
   errReg := err_rsp_wire
   dataReg := data_rsp_wire
+  ackReg := ack_rsp_wire
 
   io.rsp.valid := validReg
   io.rsp.bits.error := errReg
   io.rsp.bits.dataResponse := dataReg
+  io.rsp.bits.ackWrite := ackReg
 
 }
 
