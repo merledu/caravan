@@ -32,13 +32,23 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     io.reqIn.ready := true.B
 
 
+    // FIXME: make FSM to give valid just for one cycle
+    // FIXME: make bits generic that for 64-bits bus can accept 8 bits of mask and etc
+    // TODO: Generic a_size logic incl. mask_chk
+    // TODO: Functional Verification
+
     // when(io.reqIn.valid){
         io.tlMasterTransmitter.bits.a_opcode := /*Mux(readyReg,*/ Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)/*, 2.U)*/
         io.tlMasterTransmitter.bits.a_data := io.reqIn.bits.dataRequest
         io.tlMasterTransmitter.bits.a_address := io.reqIn.bits.addrRequest
         io.tlMasterTransmitter.bits.a_param := 0.U
         io.tlMasterTransmitter.bits.a_source := 2.U 
-        io.tlMasterTransmitter.bits.a_size := MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
+        io.tlMasterTransmitter.bits.a_size := MuxLookup(io.reqIn.bits.activeByteLane,2.U,Array(
+                                                                                (1.U) -> 0.U,
+                                                                                (3.U || 12.U) -> 1.U,
+                                                                                (15.U) -> 2.U
+                                                                            ))
+        MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
                                                                                 (1.U) -> 0.U,
                                                                                 (2.U) -> 1.U,
                                                                                 (4.U) -> 2.U,
