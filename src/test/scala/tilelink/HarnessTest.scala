@@ -30,7 +30,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(false.B)
       c.clock.step(2)
-      c.io.valid.poke(false.B)
+      // c.io.valid.poke(false.B)
       // println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       // while(c.io.validResp.peek().litToBoolean != true) {
       //   println("wait")
