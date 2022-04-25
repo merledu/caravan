@@ -45,7 +45,7 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
 
   io.dataResp := tlHost.io.rspOut.bits.dataResponse
   io.validResp := tlHost.io.rspOut.valid
-  io.ackResp := tlHost.io.rspOut.bits.ackWrite
+  // io.ackResp := tlHost.io.rspOut.bits.ackWrite
 
 }
 

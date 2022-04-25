@@ -14,7 +14,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
     })
 
     val validReg = RegInit(false.B)
-    val ackWriteReg = RegInit(false.B)
+    // val ackWriteReg = RegInit(false.B)
 
     io.rsp.valid := validReg
     io.rsp.bits.error := false.B
@@ -61,7 +61,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
 
     io.rsp.valid := validReg
     io.rsp.bits.dataResponse := data.asUInt
-    io.rsp.bits.ackWrite := ackWriteReg
+    // io.rsp.bits.ackWrite := ackWriteReg
 
     
 

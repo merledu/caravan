@@ -66,7 +66,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   io.dataResp := host.io.rspOut.bits.dataResponse
   io.validResp := host.io.rspOut.valid
   io.errResp := host.io.rspOut.bits.error
-  io.ackResp := host.io.rspOut.bits.ackWrite
+  // io.ackResp := host.io.rspOut.bits.ackWrite
 
 }
 
@@ -145,6 +145,6 @@ class DummyGpioController(implicit val config: TilelinkConfig) extends Module {
   io.rsp.valid := validReg
   io.rsp.bits.error := errReg
   io.rsp.bits.dataResponse := dataReg
-  io.rsp.bits.ackWrite := ackReg
+  // io.rsp.bits.ackWrite := ackReg
 
 }
