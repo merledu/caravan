@@ -4,12 +4,14 @@ import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util._
 
-class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter with OpCodes {
+class TilelinkCDevice(implicit val config: TilelinkConfig) extends DeviceAdapter with OpCodes {
     val io = IO(new Bundle {
         val tlSlaveTransmitter = Decoupled(new TilelinkSlave())
         val tlMasterReceiver = Flipped(Decoupled(new TilelinkMaster()))
         val reqOut = Decoupled(new TLRequest())
         val rspIn = Flipped(Decoupled(new TLResponse()))
+
+        // val tlAckReceiver = Flipped(Decoupled(new channelEBundle))
     })
 
 
