@@ -14,7 +14,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
     })
 
     val validReg = RegInit(false.B)
-    val ackWriteReg = RegInit(false.B)
+    // val ackWriteReg = RegInit(false.B)
 
     io.rsp.valid := validReg
     io.rsp.bits.error := false.B
@@ -38,20 +38,20 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
         mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
         rData map (_ := DontCare)
         validReg := true.B
-        ackWriteReg := true.B
+        // ackWriteReg := true.B
 
 
     }.elsewhen(io.req.fire() && !io.req.bits.isWrite){
          
         rData := mem.read(io.req.bits.addrRequest/4.U)
         validReg := true.B
-        ackWriteReg := false.B
+        // ackWriteReg := false.B
         
     }.otherwise{
         
         rData map (_ := DontCare)
         validReg := false.B
-        ackWriteReg := false.B
+        // ackWriteReg := false.B
         
     }
 
@@ -61,7 +61,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
 
     io.rsp.valid := validReg
     io.rsp.bits.dataResponse := data.asUInt
-    io.rsp.bits.ackWrite := ackWriteReg
+    // io.rsp.bits.ackWrite := ackWriteReg
 
     
 

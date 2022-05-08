@@ -19,7 +19,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
-      c.io.dataReq.poke(24.U)
+      c.io.dataReq.poke(11.U)
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
       c.clock.step(2)

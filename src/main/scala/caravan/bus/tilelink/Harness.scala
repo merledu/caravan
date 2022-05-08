@@ -17,7 +17,7 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
-    val ackResp = Output(Bool())
+    // val ackResp = Output(Bool())
   })
 
   implicit val request = new TLRequest()    
@@ -45,7 +45,7 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
 
   io.dataResp := tlHost.io.rspOut.bits.dataResponse
   io.validResp := tlHost.io.rspOut.valid
-  io.ackResp := tlHost.io.rspOut.bits.ackWrite
+  // io.ackResp := tlHost.io.rspOut.bits.ackWrite
 
 }
 

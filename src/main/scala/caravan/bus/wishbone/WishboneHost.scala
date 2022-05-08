@@ -128,7 +128,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
     io.rspOut.valid := respReg
     io.rspOut.bits.dataResponse := dataReg
     io.rspOut.bits.error := errReg
-    io.rspOut.bits.ackWrite := ackReg
+    // io.rspOut.bits.ackWrite := ackReg
   }
 
 
