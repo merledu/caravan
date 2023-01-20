@@ -6,7 +6,7 @@ import chisel3.stage.ChiselStage
 import chisel3.util.{Cat, Decoupled}
 import chisel3.util.experimental.loadMemoryFromFile
 
-class Harness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
+class WishboneHarness/*(programFile: Option[String])*/(implicit val config: WishboneConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.addressWidth.W))
@@ -242,7 +242,7 @@ object SwitchHarnessDriver extends App {
   println((new ChiselStage).emitVerilog(new SwitchHarness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
 
-object HarnessDriver extends App {
+object WishboneHarnessDriver extends App {
   implicit val config = WishboneConfig(addressWidth = 10, dataWidth = 32)
-  println((new ChiselStage).emitVerilog(new Harness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
+  println((new ChiselStage).emitVerilog(new WishboneHarness(/*Some("/Users/mbp/Desktop/mem1.txt")*/)))
 }
