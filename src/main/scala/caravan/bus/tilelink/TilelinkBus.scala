@@ -71,20 +71,3 @@ case class TLDevice() extends BusDevice
 //          d_denied     | Bool                 | The slave was unable to service the request.                                                        
 //          d_corrupt    | Bool                 | Reserved; must be 0                                                                                 
 //          d_data       | config.w x 8 [32:0]  | Response data of configurable width                                                                 
-
-
-
-
-class channelCBundle(implicit val config:TilelinkConfig) extends Bundle {
-    val c_opcode = UInt(3.W)
-    val c_param = UInt(3.W)
-    val c_size = UInt(config.z.W)
-    val c_source = UInt(config.o.W)
-    val c_address = UInt(config.a.W)
-    val c_data = UInt((config.w * 8).W)
-    val c_corrupt = Bool()
-}
-
-class channelEBundle(implicit val config:TilelinkConfig) extends Bundle {
-    val e_sink = UInt(config.i.W)
-}
