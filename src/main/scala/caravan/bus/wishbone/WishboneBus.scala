@@ -51,5 +51,6 @@ class WBRequest(implicit val config: WishboneConfig) extends AbstrRequest {
 class WBResponse(implicit val config: WishboneConfig) extends AbstrResponse {
   override val dataResponse: UInt = UInt(config.dataWidth.W)
   override val error: Bool = Bool()
+  // override val ackWrite: Bool = Bool()
 }
 

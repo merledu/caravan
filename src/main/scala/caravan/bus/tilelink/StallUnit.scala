@@ -17,8 +17,8 @@ class stallUnit extends Module {
 
     
 
-    val bundle_reg = RegInit(0.U.asTypeOf(new TilelinkSlave))
-    val valid_reg = RegInit(0.U(1.W))
+    val bundle_reg = WireInit(0.U.asTypeOf(new TilelinkSlave))
+    val valid_reg = WireInit(0.U(1.W))
     
     bundle_reg := io.bundle_in
     valid_reg := io.valid_in

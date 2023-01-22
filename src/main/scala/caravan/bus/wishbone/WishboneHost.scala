@@ -41,6 +41,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
   val dataReg = RegInit(0.U(config.dataWidth.W))
   val respReg = RegInit(false.B)
   val errReg = RegInit(false.B)
+  val ackReg = RegInit(io.wbSlaveReceiver.bits.ack)
   // new changes added here
   val stbReg = RegInit(false.B)
   val cycReg = RegInit(false.B)
@@ -127,6 +128,7 @@ class WishboneHost(implicit val config: WishboneConfig) extends HostAdapter {
     io.rspOut.valid := respReg
     io.rspOut.bits.dataResponse := dataReg
     io.rspOut.bits.error := errReg
+    // io.rspOut.bits.ackWrite := ackReg
   }
 
 

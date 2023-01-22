@@ -13,5 +13,6 @@ class NativeRequest(implicit val config: NativeConfig) extends AbstrRequest {
 class NativeResponse(implicit val config: NativeConfig) extends AbstrResponse {
   override val dataResponse: UInt = UInt(config.dataWidth.W)
   override val error: Bool = Bool()
+  // override val ackWrite: Bool = Bool()
 }
 

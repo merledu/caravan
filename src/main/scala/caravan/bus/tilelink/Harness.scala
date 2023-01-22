@@ -7,7 +7,7 @@ import chisel3.util.{Cat, Decoupled, MuxLookup}
 import chisel3.util.experimental.loadMemoryFromFile
 
 
-class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConfig) extends Module {
+class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: TilelinkConfig) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val addrReq = Input(UInt(config.a.W))
@@ -17,6 +17,7 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
+    // val ackResp = Output(Bool())
   })
 
   implicit val request = new TLRequest()    
@@ -36,7 +37,7 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
   tlHost.io.reqIn.bits.dataRequest := io.dataReq
   tlHost.io.reqIn.bits.activeByteLane := io.byteLane
   tlHost.io.reqIn.bits.isWrite := io.isWrite
-
+  
 
 
   tlSlave.io.reqOut <> memCtrl.io.req
@@ -44,7 +45,13 @@ class Harness/*(programFile: Option[String])*/(implicit val config: TilelinkConf
 
   io.dataResp := tlHost.io.rspOut.bits.dataResponse
   io.validResp := tlHost.io.rspOut.valid
+  // io.ackResp := tlHost.io.rspOut.bits.ackWrite
 
+}
+
+object TilelinkDriver extends App {
+  implicit val config = TilelinkConfig()
+  (new ChiselStage).emitVerilog(new TilelinkHarness())
 }
 
 
