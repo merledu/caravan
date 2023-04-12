@@ -13,8 +13,8 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     })
 
 
-    val idle :: wait_for_resp :: Nil = Enum(2)
-    val stateReg = RegInit(idle)
+    //val idle :: wait_for_resp :: Nil = Enum(2)
+    //val stateReg = RegInit(idle)
 
     io.tlMasterReceiver.ready := true.B
     io.rspIn.ready := false.B
@@ -38,7 +38,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     
     // val stall = Module(new stallUnit)
 
-    when(stateReg === idle){
+    //when(stateReg === idle){
 
         when(io.tlMasterReceiver.valid){
 
@@ -48,14 +48,14 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             io.reqOut.bits.isWrite := io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U
             io.reqOut.valid := true.B
 
-            stateReg := wait_for_resp
+            //stateReg := wait_for_resp
             io.rspIn.ready := true.B
 
         }
 
-    }.elsewhen(stateReg === wait_for_resp){
+        //}.elsewhen(stateReg === wait_for_resp){
 
-        io.rspIn.ready := true.B
+        // io.rspIn.ready := true.B
 
         when(io.rspIn.valid){
 
@@ -69,11 +69,11 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             io.tlSlaveTransmitter.bits.d_corrupt := 0.U
             io.tlSlaveTransmitter.valid := io.rspIn.valid
 
-            stateReg := idle
-
+            //stateReg := idle
+            io.rspIn.ready := false.B
         }
 
-    }
+    //}
 
 
     // Sending Response coming from Memory in the STALL to delay the response one cycle

@@ -20,6 +20,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
     val ackResp = Output(Bool())
   })
 
+  io.ackResp := false.B
   implicit val request = new TLRequest()
   implicit val response = new TLResponse()
 
@@ -39,7 +40,8 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
 
 
   host.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
-  host.io.reqIn.valid := Mux(host.io.reqIn.ready, io.valid, false.B)
+  //host.io.reqIn.valid := Mux(host.io.reqIn.ready, io.valid, false.B)
+  host.io.reqIn.valid := io.valid
   host.io.reqIn.bits.addrRequest := io.addrReq
   host.io.reqIn.bits.dataRequest := io.dataReq
   host.io.reqIn.bits.activeByteLane := io.byteLane
