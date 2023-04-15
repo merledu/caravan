@@ -6,4 +6,8 @@ trait OpCodes {
     val PutFullData = 0
     val PutPartialData = 1
     val AccessAck = 0
+    val Arithmetic = 2
+    val Logical = 3
+    val Intent = 5
+    val HintAck = 2
 }

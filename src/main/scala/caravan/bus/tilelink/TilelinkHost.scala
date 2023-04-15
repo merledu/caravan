@@ -59,11 +59,23 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
 
         when(io.reqIn.valid){
+
             println("Request Valid Accepted")
-            io.tlMasterTransmitter.bits.a_opcode    := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)/*, 2.U)*/
+            if (config.uh){
+                io.tlMasterTransmitter.bits.a_opcode    := Mux1H(Cat(io.reqIn.bits.is_intent.get,io.reqIn.bits.is_logical.get,io.reqIn.bits.is_arithmetic.get,~(io.reqIn.bits.is_intent.get | io.reqIn.bits.is_logical.get | io.reqIn.bits.is_arithmetic.get))
+                                                            ,Seq(Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U),Arithmetic.U,Logical.U,Intent.U
+                                                            ))
+            }else{
+                io.tlMasterTransmitter.bits.a_opcode := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)
+            }
             io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
             io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
-            io.tlMasterTransmitter.bits.a_param     := 0.U
+
+            if (config.uh){
+                io.tlMasterTransmitter.bits.a_param     := io.reqIn.bits.param.get.asUInt
+            }else{
+                io.tlMasterTransmitter.bits.a_param := 0.U
+            }
             io.tlMasterTransmitter.bits.a_source    := 2.U 
             io.tlMasterTransmitter.bits.a_size      := MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
                                                                                     (1.U) -> 0.U,

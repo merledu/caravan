@@ -1,5 +1,4 @@
 package caravan.bus.tilelink
-
 import caravan.bus.common.BusConfig
 
 
@@ -21,6 +20,9 @@ case class TilelinkConfig
     val z: Int = 2,
     val o: Int = 8,
     val i: Int = 1,
+
+    // TL-UH
+    val uh : Boolean = true
 
 ) extends BusConfig
 

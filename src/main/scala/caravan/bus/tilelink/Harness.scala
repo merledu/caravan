@@ -14,6 +14,10 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
     val dataReq = Input(UInt((config.w * 8).W))
     val byteLane = Input(UInt(config.w.W))
     val isWrite = Input(Bool())
+    val is_arithmetic = if(config.uh) Some(Input(Bool())) else None
+    val is_logical = if(config.uh) Some(Input(Bool())) else None
+    val is_intent = if(config.uh) Some(Input(Bool())) else None 
+    val param = if(config.uh) Some(Input(UInt(3.W))) else None
 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
@@ -38,12 +42,18 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
   tlHost.io.reqIn.bits.dataRequest := io.dataReq
   tlHost.io.reqIn.bits.activeByteLane := io.byteLane
   tlHost.io.reqIn.bits.isWrite := io.isWrite
-  
+  if (config.uh){
+    tlHost.io.reqIn.bits.is_arithmetic.get := io.is_arithmetic.get
+    tlHost.io.reqIn.bits.is_logical.get := io.is_logical.get
+    tlHost.io.reqIn.bits.is_intent.get := io.is_intent.get
+    tlHost.io.reqIn.bits.param.get := io.param.get
+  }
 
 
   tlSlave.io.reqOut <> memCtrl.io.req
   tlSlave.io.rspIn <> memCtrl.io.rsp
 
+  
   io.dataResp := tlHost.io.rspOut.bits.dataResponse
   io.validResp := tlHost.io.rspOut.valid
   // io.ackResp := tlHost.io.rspOut.bits.ackWrite
