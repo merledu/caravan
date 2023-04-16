@@ -32,7 +32,8 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
   tlHost.io.tlMasterTransmitter <> tlSlave.io.tlMasterReceiver
   tlSlave.io.tlSlaveTransmitter <> tlHost.io.tlSlaveReceiver
 
-  tlHost.io.reqIn.valid := Mux(tlHost.io.reqIn.ready, io.valid, false.B)
+  //tlHost.io.reqIn.valid := Mux(tlHost.io.reqIn.ready, io.valid, false.B)
+  tlHost.io.reqIn.valid := io.valid
   tlHost.io.reqIn.bits.addrRequest := io.addrReq
   tlHost.io.reqIn.bits.dataRequest := io.dataReq
   tlHost.io.reqIn.bits.activeByteLane := io.byteLane
@@ -53,5 +54,3 @@ object TilelinkDriver extends App {
   implicit val config = TilelinkConfig()
   (new ChiselStage).emitVerilog(new TilelinkHarness())
 }
-
-

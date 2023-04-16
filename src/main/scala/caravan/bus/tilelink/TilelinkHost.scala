@@ -15,12 +15,12 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
 
     //FSM for indicating valid response only when the response comes.
-    val idle :: wait_for_resp :: Nil = Enum(2)
-    val stateReg = RegInit(idle)
+    //val idle :: wait_for_resp :: Nil = Enum(2)
+    //val stateReg = RegInit(idle)
     val addrReg  = RegInit(0.U)
     // val respReg = RegInit(false.B)
     // val readyReg = RegInit(true.B)
-    dontTouch(stateReg)
+    // dontTouch(stateReg)
     dontTouch(io.reqIn.valid)
     // when(fire) {
     //     readyReg := false.B
@@ -31,7 +31,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
     io.tlSlaveReceiver.ready    := false.B
     io.reqIn.ready              := true.B
-
+    dontTouch(io.reqIn.ready)
 
     // io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
     // io.rspOut.bits.error        := io.tlSlaveReceiver.bits.d_denied
@@ -53,12 +53,12 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     io.rspOut.valid                         := false.B
 
 
-    when(stateReg === idle){
+    //when(stateReg === idle){
         // stateReg := Mux(io.reqIn.valid, process_data, idle)
     // }.elsewhen(stateReg === process_data){
 
-        when(io.reqIn.valid){
 
+        when(io.reqIn.valid){
             io.tlMasterTransmitter.bits.a_opcode    := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)/*, 2.U)*/
             io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
             io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
@@ -74,29 +74,37 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             io.tlMasterTransmitter.bits.a_corrupt   := false.B
             io.tlMasterTransmitter.valid            := io.reqIn.valid
 
-            stateReg := wait_for_resp
-            io.tlSlaveReceiver.ready := true.B 
+            //stateReg := wait_for_resp
+            //io.tlSlaveReceiver.ready := true.B 
             addrReg := io.reqIn.bits.addrRequest
-
+            io.reqIn.ready           := false.B
         }
-
         
-    }.elsewhen(stateReg === wait_for_resp){
+        
+    //}.elsewhen(stateReg === wait_for_resp){
 
-        io.tlSlaveReceiver.ready := true.B
-        io.reqIn.ready           := false.B
+       // io.tlSlaveReceiver.ready := true.B
+       // io.reqIn.ready           := false.B
 
         when(io.tlSlaveReceiver.valid){
-
+            //io.tlSlaveReceiver.ready := false.B
+            //io.reqIn.ready           := false.B
             io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
             io.rspOut.bits.error := io.tlSlaveReceiver.bits.d_denied
             // io.rspOut.bits.ackWrite := io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U
             io.rspOut.valid := io.tlSlaveReceiver.valid
-            stateReg := idle
+            //stateReg := idle
 
+            io.tlSlaveReceiver.ready := false.B
+            io.reqIn.ready           := true.B
         }
+        
+        /*.elsewhen(io.tlSlaveReceiver.ready){
+            println("Valid Not Recieved")
+            io.reqIn.ready := false.B
+        }*/
 
-    }
+   // }
 
     // io.tlSlaveReceiver.ready := true.B
     // io.reqIn.ready := true.B

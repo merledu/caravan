@@ -59,6 +59,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Wishbo
     val errResp = Output(Bool())
     val ackResp = Output(Bool())
   })
+  io.ackResp := false.B
 
   implicit val request = new WBRequest()
   implicit val response = new WBResponse()

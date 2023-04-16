@@ -5,7 +5,6 @@ import chisel3.stage.ChiselStage
 import chisel3.util.{Cat, Decoupled, MuxLookup}
 import chisel3.util.experimental.loadMemoryFromFile
 
-
 //implicit parameters for Config, Request and Response
 class DummyMemController/*(programFile: Option[String])*/(implicit val config: BusConfig, implicit val request: AbstrRequest, implicit val response: AbstrResponse) extends Module {
     val io = IO(new Bundle {
@@ -14,11 +13,13 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
     })
 
     val validReg = RegInit(false.B)
+    val add = Reg(UInt(32.W))
     // val ackWriteReg = RegInit(false.B)
 
     io.rsp.valid := validReg
     io.rsp.bits.error := false.B
     io.req.ready := true.B
+    add := io.req.bits.addrRequest
 
     // masked memory init
     val mem = SyncReadMem(1024, Vec(4, UInt(8.W)))
@@ -28,14 +29,13 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
     // }
 
     // holds the data in byte vectors read from memory
-    val rData = Wire(Vec(4,UInt(8.W)))
+    val rData = Reg(Vec(4,UInt(8.W)))
     // holds the bytes that must be read according to the activeByteLane
-    val data = Wire(Vec(4,UInt(8.W)))
+    val data = Reg(Vec(4,UInt(8.W)))
 
     when(io.req.fire() && io.req.bits.isWrite){
 
-        
-        mem.write(io.req.bits.addrRequest/4.U, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
+        mem.write(add, io.req.bits.dataRequest.asTypeOf(Vec(4,UInt(8.W))), io.req.bits.activeByteLane.asBools)
         rData map (_ := DontCare)
         validReg := true.B
         // ackWriteReg := true.B
@@ -43,7 +43,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
 
     }.elsewhen(io.req.fire() && !io.req.bits.isWrite){
          
-        rData := mem.read(io.req.bits.addrRequest/4.U)
+        rData := mem.read(add)
         validReg := true.B
         // ackWriteReg := false.B
         

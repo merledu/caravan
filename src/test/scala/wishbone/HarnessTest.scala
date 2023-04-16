@@ -1,5 +1,5 @@
 package wishbone
-import caravan.bus.wishbone.{Harness, WishboneConfig, WBResponse, WBRequest}
+import caravan.bus.wishbone.{WishboneHarness, WishboneConfig, WBResponse, WBRequest}
 import chisel3._
 import org.scalatest._
 import chiseltest._
@@ -14,7 +14,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   "should write and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
-    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -29,16 +29,30 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.clock.step(1)
       }
       println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      println("Got the response now sending new request")
+      c.clock.step(2)
+      c.io.valid.poke(true.B)
+      c.io.addrReq.poke(0.U)
+      c.io.dataReq.poke(0.U)
+      c.io.isWrite.poke(false.B)
+      c.clock.step(1)
+      c.io.valid.poke(false.B)
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+      while(c.io.validResp.peek().litToBoolean != true) {
+        println("wait")
+        c.clock.step(1)
+      }
+      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
       println("Got the response now reading expected data")
       c.io.dataResp.expect(24.U)
-      println("EXPECTED DATA IS: 24 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
+      println("EXPECTED DATA IS: " + 24.U.litValue().toInt + " GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
 
   "should write full word and read first byte" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
-    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -77,7 +91,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   "should write full word and read first two bytes" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
-    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
@@ -116,7 +130,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   "should write a full word and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
-    test(new Harness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(0.U)
