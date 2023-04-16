@@ -7,7 +7,7 @@ import chiseltest.experimental.TestOptionBuilder._
 import chiseltest.internal.VerilatorBackendAnnotation
 
 class ErrorTest extends FreeSpec with ChiselScalatestTester {
-    "Testing Error Module" in {
+    "Tilelink Testing Error Module" in {
         implicit val config = TilelinkConfig()
         test(new TilelinkError()).withAnnotations(Seq(VerilatorBackendAnnotation)) { c =>
             c.clock.step(20)

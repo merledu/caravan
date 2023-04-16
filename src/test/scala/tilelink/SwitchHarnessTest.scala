@@ -12,7 +12,7 @@ import common.MemoryDumpFileHelper // necessary to import
 
 class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
 
-  "should write to all GPIO registers and read them back" in {
+  "tilelink should write to all GPIO registers and read them back" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -91,7 +91,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
     }
   }
 
-  "should write to a false GPIO register and produce error" in {
+  "tilelink should write to a false GPIO register and produce error" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -198,7 +198,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
   //   }
   // }
 
-  "should write to a device that is not in memory map and produce error" in {
+  "tilelink should write to a device that is not in memory map and produce error" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>

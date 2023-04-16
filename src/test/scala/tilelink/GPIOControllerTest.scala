@@ -7,7 +7,7 @@ import chiseltest.experimental.TestOptionBuilder._
 import chiseltest.internal.VerilatorBackendAnnotation
 
 class GpioControllerTest extends FreeSpec with ChiselScalatestTester {
-  "write 40 in OUTPUT_EN_REG and read it back" in {
+  "tilelink write 40 in OUTPUT_EN_REG and read it back" in {
     implicit val config = TilelinkConfig()
     test(new DummyGpioController()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -27,7 +27,7 @@ class GpioControllerTest extends FreeSpec with ChiselScalatestTester {
     }
   }
 
-  "write 40 in WDATA_REG and read it back" in {
+  "tilelink write 40 in WDATA_REG and read it back" in {
     implicit val config = TilelinkConfig()
     test(new DummyGpioController()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -47,7 +47,7 @@ class GpioControllerTest extends FreeSpec with ChiselScalatestTester {
     }
   }
 
-  "write 40 in RDATA_REG and read it back" in {
+  "tilelink write 40 in RDATA_REG and read it back" in {
     implicit val config = TilelinkConfig()
     test(new DummyGpioController()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -67,7 +67,7 @@ class GpioControllerTest extends FreeSpec with ChiselScalatestTester {
     }
   }
 
-  "write 40 in a register not available causing error" in {
+  "tilelink write 40 in a register not available causing error" in {
     implicit val config = TilelinkConfig()
     test(new DummyGpioController()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
