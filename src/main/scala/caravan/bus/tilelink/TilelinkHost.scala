@@ -59,7 +59,6 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
 
         when(io.reqIn.valid){
-            println("Request Valid Accepted")
             io.tlMasterTransmitter.bits.a_opcode    := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)/*, 2.U)*/
             io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
             io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
@@ -88,7 +87,6 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
        // io.reqIn.ready           := false.B
 
         when(io.tlSlaveReceiver.valid){
-            println("Valid Recieved")
             //io.tlSlaveReceiver.ready := false.B
             //io.reqIn.ready           := false.B
             io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
