@@ -1,0 +1,12 @@
+{
+  "peripherals": [
+    {
+      "name": "UART",
+      "value": 2
+    },
+    {
+      "name": "SPI",
+      "value": 3
+    }
+  ]
+}
