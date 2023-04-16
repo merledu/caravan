@@ -1,12 +1,12 @@
 {
   "peripherals": [
     {
-      "name": "UART",
-      "value": 2
+      "name": "GPIO",
+      "value": 0
     },
     {
-      "name": "SPI",
-      "value": 3
+      "name": "DCCM",
+      "value": 1
     }
   ]
 }

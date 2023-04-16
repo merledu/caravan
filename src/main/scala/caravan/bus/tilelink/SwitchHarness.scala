@@ -20,6 +20,8 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
     val ackResp = Output(Bool())
   })
 
+  Peripherals.addValuesFromJson("peripherals.json")
+
   io.ackResp := false.B
   implicit val request = new TLRequest()
   implicit val response = new TLResponse()

@@ -59,6 +59,9 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Wishbo
     val errResp = Output(Bool())
     val ackResp = Output(Bool())
   })
+
+  Peripherals.addValuesFromJson("peripherals.json")
+
   io.ackResp := false.B
 
   implicit val request = new WBRequest()

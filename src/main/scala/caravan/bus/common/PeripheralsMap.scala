@@ -9,8 +9,6 @@ import chisel3.experimental.ChiselEnum
 import chisel3.util._
 
 /*
-  * GPIO and DCCM are fixed for now.
-  * Future Plans: Dynamicise GPIO and DCCM as well.
   * USAGE:
     - first do `Peripherls.addValuesFromJson(/path/to/json/file)`
     - then simply get the value of each peripheral by `Peripheral.get("peripheralName")`
@@ -19,10 +17,7 @@ import chisel3.util._
 
 object Peripherals {
 
-  private var names: Map[String, UInt] = Map(
-    "GPIO" -> 0.U,
-    "DCCM" -> 1.U
-  )
+  private var names: Map[String, UInt] = Map()
 
   // Read JSON file
   def readJsonFile(jsonFilename: String): JsValue = {
@@ -34,15 +29,11 @@ object Peripherals {
   def addValuesFromJson(jsonFilename: String): Unit = {
     val json: JsValue = readJsonFile(jsonFilename)
     val peripherals: List[JsValue] = (json \ "peripherals").as[List[JsValue]]
-    println(Peripherals)
 
     peripherals.foreach { peripheral =>
-      println(peripheral)
       val name: String = (peripheral \ "name").as[String]
       val value: Int = (peripheral \ "value").as[Int]
-      println(value)
       names += (name -> value.U)
-      println(names)
     }
   }
 
