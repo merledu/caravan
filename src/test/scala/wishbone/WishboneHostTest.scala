@@ -8,7 +8,7 @@ import chiseltest.internal.VerilatorBackendAnnotation
 
 class WishboneHostTest extends FreeSpec with ChiselScalatestTester {
 
-  "just work" in {
+  "wishbone just work" in {
     implicit val config = WishboneConfig(10, 32)
     test(new WishboneHost).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(14)

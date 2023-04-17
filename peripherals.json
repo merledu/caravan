@@ -1,0 +1,12 @@
+{
+  "peripherals": [
+    {
+      "name": "GPIO",
+      "value": 0
+    },
+    {
+      "name": "DCCM",
+      "value": 1
+    }
+  ]
+}

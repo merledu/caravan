@@ -12,7 +12,7 @@ import common.MemoryDumpFileHelper // necessary to import
 
 
 class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
-  "should write and read full word" in {
+  "tilelink should write and read full word" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -41,7 +41,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       println("EXPECTED DATA IS: 24 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
-   "should write full word and read first byte" in {
+   "tilelink should write full word and read first byte" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -80,7 +80,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       println("EXPECTED DATA IS: " + "hf".U.litValue().toInt + " GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }
   }
-   "should write full word and read first two bytes" in {
+   "tilelink should write full word and read first two bytes" in {
     implicit val config = TilelinkConfig()
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>

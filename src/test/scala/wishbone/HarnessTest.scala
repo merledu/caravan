@@ -11,7 +11,7 @@ import org.scalatest.FreeSpec
 import common.MemoryDumpFileHelper // necessary to import
 
 class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
-  "should write and read full word" in {
+  "wishbone should write and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
     test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -49,7 +49,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
     }
   }
 
-  "should write full word and read first byte" in {
+  "wishbone should write full word and read first byte" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
     test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -88,7 +88,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
     }
   }
 
-  "should write full word and read first two bytes" in {
+  "wishbone should write full word and read first two bytes" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
     test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -127,7 +127,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
     }
   }
 
-  "should write a full word and read full word" in {
+  "wishbone should write a full word and read full word" in {
     implicit val config = WishboneConfig(10, 32)
     // val programFile = getFile
     test(new WishboneHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
