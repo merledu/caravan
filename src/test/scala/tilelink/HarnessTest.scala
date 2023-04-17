@@ -40,14 +40,14 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.clock.step(2)
       c.io.valid.poke(true.B)
       c.io.addrReq.poke(8.U)
-      c.io.dataReq.poke(9.U)
+      c.io.dataReq.poke(48.U)
       c.io.isWrite.poke(false.B)
       c.io.byteLane.poke("b1111".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(true.B)
-        c.io.is_logical.get.poke(false.B)
+        c.io.is_arithmetic.get.poke(false.B)
+        c.io.is_logical.get.poke(true.B)
         c.io.is_intent.get.poke(false.B)
-        c.io.param.get.poke(0.U)
+        c.io.param.get.poke(1.U)
       }
       c.clock.step(1)
       c.io.valid.poke(false.B)
@@ -65,7 +65,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       }
       c.clock.step(1)
       c.io.valid.poke(false.B)
-      c.clock.step(2)
+      c.clock.step(1)
       c.io.dataResp.expect(24.U)
       println("EXPECTED DATA IS: 24 GOT " + c.io.dataResp.peek().litValue().toInt.toString)
     }

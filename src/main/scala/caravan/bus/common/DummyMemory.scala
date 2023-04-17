@@ -31,7 +31,7 @@ class DummyMemController/*(programFile: Option[String])*/(implicit val config: B
     // holds the data in byte vectors read from memory
     val rData = Reg(Vec(4,UInt(8.W)))
     // holds the bytes that must be read according to the activeByteLane
-    val data = Reg(Vec(4,UInt(8.W)))
+    val data = Wire(Vec(4,UInt(8.W)))
 
     when(io.req.fire() && io.req.bits.isWrite){
 

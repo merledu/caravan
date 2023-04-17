@@ -39,7 +39,7 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
   //tlHost.io.reqIn.valid := Mux(tlHost.io.reqIn.ready, io.valid, false.B)
   tlHost.io.reqIn.valid := io.valid
   tlHost.io.reqIn.bits.addrRequest := io.addrReq
-  tlHost.io.reqIn.bits.dataRequest := io.dataReq
+  tlHost.io.reqIn.bits.dataRequest := io.dataReq.asUInt
   tlHost.io.reqIn.bits.activeByteLane := io.byteLane
   tlHost.io.reqIn.bits.isWrite := io.isWrite
   if (config.uh){
