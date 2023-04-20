@@ -1,5 +1,5 @@
 package caravan.bus.tilelink
-import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController}
+import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController,BlockRamWithMasking}
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.ChiselStage
@@ -29,7 +29,7 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
 
   val tlHost = Module(new TilelinkHost())
   val tlSlave = Module(new TilelinkDevice())
-  val memCtrl = Module(new DummyMemController())
+  val memCtrl = Module(new BlockRamWithMasking(new TLRequest(),new TLResponse(),1024))
 
   tlHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
