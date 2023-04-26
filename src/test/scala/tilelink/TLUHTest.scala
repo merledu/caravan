@@ -42,7 +42,8 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
                                             case (a,b) if a == 3 && b == 0 => data_1 ^ data_2
                                             case (a,b) if a == 3 && b == 1 => data_1 | data_2
                                             case (a,b) if a == 3 && b == 2 => data_1 & data_2
-                                            case (a,b) if a == 3 && b == 3 => data_2                
+                                            case (a,b) if a == 3 && b == 3 => data_2
+                                            case _ => data_1                
             }
 
             val result1 : BigInt = if (result < 0)

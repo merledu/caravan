@@ -66,7 +66,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
         io.rspIn.ready := true.B
         when(io.rspIn.valid){
                 io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
-                io.reqOut.bits.dataRequest := MuxCase(io.tlMasterReceiver.bits.a_data, Array(
+                io.reqOut.bits.dataRequest := MuxCase(io.rspIn.bits.dataResponse,  Array(
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 0.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
                                                                                                                                                                                                 io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 1.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
