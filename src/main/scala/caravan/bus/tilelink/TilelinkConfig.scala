@@ -17,7 +17,7 @@ case class TilelinkConfig
 
     val w: Int = 4,
     val a: Int = 32,
-    val z: Int = 2,
+    val z: Int = 8,
     val o: Int = 8,
     val i: Int = 1,
 

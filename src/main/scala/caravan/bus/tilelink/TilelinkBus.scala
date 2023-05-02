@@ -13,6 +13,7 @@ class TLRequest(implicit val config: TilelinkConfig) extends AbstrRequest {
   val is_logical = if(config.uh) Some(Bool()) else None
   val is_intent = if(config.uh) Some(Bool()) else None 
   val param = if(config.uh) Some(UInt(3.W)) else None
+  val size = if (config.uh) Some(UInt(config.z.W)) else None
 }
 
 class TLResponse(implicit val config: TilelinkConfig) extends AbstrResponse {

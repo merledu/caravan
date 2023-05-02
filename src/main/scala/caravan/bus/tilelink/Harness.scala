@@ -18,6 +18,8 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
     val is_logical = if(config.uh) Some(Input(Bool())) else None
     val is_intent = if(config.uh) Some(Input(Bool())) else None 
     val param = if(config.uh) Some(Input(UInt(3.W))) else None
+    val size = if (config.uh) Some(Input(UInt(config.z.W))) else None
+
 
     val validResp = Output(Bool())
     val dataResp = Output(UInt(32.W))
@@ -47,6 +49,7 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
     tlHost.io.reqIn.bits.is_logical.get := io.is_logical.get
     tlHost.io.reqIn.bits.is_intent.get := io.is_intent.get
     tlHost.io.reqIn.bits.param.get := io.param.get
+    tlHost.io.reqIn.bits.size.get := io.size.get
   }
 
 

@@ -54,6 +54,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.dataReq.poke("habcdef0f".U)
       c.io.byteLane.poke("b1111".U)
@@ -99,6 +100,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
@@ -143,6 +145,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
@@ -166,6 +169,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(4.U)
+        c.io.size.get.poke(2.U)
       }
       c.clock.step(2)
       
@@ -187,6 +191,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       //c.clock.step(1)
       //c.io.valid.poke(false.B)
@@ -209,6 +214,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
@@ -232,6 +238,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(3.U)
+        c.io.size.get.poke(2.U)
       }
       c.clock.step(2)
       
@@ -253,6 +260,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       //c.clock.step(1)
       //c.io.valid.poke(false.B)
@@ -275,6 +283,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
@@ -298,6 +307,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(true.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(1.U)
+        c.io.size.get.poke(2.U)
       }
       c.clock.step(2)
       
@@ -319,6 +329,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       //c.clock.step(1)
       //c.io.valid.poke(false.B)
@@ -341,6 +352,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       c.io.byteLane.poke("b1111".U)
       c.io.isWrite.poke(true.B)
@@ -364,6 +376,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(true.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(3.U)
+        c.io.size.get.poke(2.U)
       }
       c.clock.step(2)
       
@@ -385,6 +398,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
         c.io.is_logical.get.poke(false.B)
         c.io.is_intent.get.poke(false.B)
         c.io.param.get.poke(0.U)
+        c.io.size.get.poke(2.U)
       }
       //c.clock.step(1)
       //c.io.valid.poke(false.B)

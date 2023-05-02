@@ -108,11 +108,11 @@ class BlockRamWithMasking[A <: AbstrRequest, B <: AbstrResponse]
 
   when(io.req.fire() && !io.req.bits.isWrite) {
     // READ
-    rdata := mem.read(io.req.bits.addrRequest/4.U)
+    rdata := mem.read(io.req.bits.addrRequest)
     validReg := true.B
   } .elsewhen(io.req.fire() && io.req.bits.isWrite) {
     // WRITE
-    mem.write(io.req.bits.addrRequest/4.U, wdata, mask)
+    mem.write(io.req.bits.addrRequest, wdata, mask)
     validReg := true.B
     rdata map (_ := DontCare)
   } .otherwise {

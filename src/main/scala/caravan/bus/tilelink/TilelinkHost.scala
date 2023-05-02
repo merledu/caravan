@@ -18,6 +18,12 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     //val idle :: wait_for_resp :: Nil = Enum(2)
     //val stateReg = RegInit(idle)
     val addrReg  = RegInit(0.U)
+    val op_reg = RegInit(6.U)
+    val param_reg = RegInit(0.U)
+    val size_reg = RegInit(0.U)
+    val add_reg = RegInit(0.U)
+    val source_reg = RegInit(0.U)
+    val counter_host = RegInit(UInt((config.z/config.w).W),0.U)
     // val respReg = RegInit(false.B)
     // val readyReg = RegInit(true.B)
     // dontTouch(stateReg)
@@ -57,8 +63,50 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         // stateReg := Mux(io.reqIn.valid, process_data, idle)
     // }.elsewhen(stateReg === process_data){
 
+        when(io.reqIn.valid.asBool && counter_host > 0.U && op_reg =/= Get.U && op_reg =/= Intent.U){
+            io.tlMasterTransmitter.bits.a_opcode := op_reg
+            io.tlMasterTransmitter.bits.a_param := param_reg
+            io.tlMasterTransmitter.bits.a_size := size_reg
+            io.tlMasterTransmitter.bits.a_source := source_reg
+            io.tlMasterTransmitter.bits.a_address := add_reg + config.w.U
+            io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
+            io.tlMasterTransmitter.bits.a_mask      := io.reqIn.bits.activeByteLane
+            io.tlMasterTransmitter.bits.a_corrupt   := false.B
+            io.tlMasterTransmitter.valid            := io.reqIn.valid
+            io.reqIn.ready           := false.B
+            counter_host := counter_host - 1.U
+            op_reg := io.tlMasterTransmitter.bits.a_opcode
+            param_reg := io.tlMasterTransmitter.bits.a_param
+            size_reg := io.tlMasterTransmitter.bits.a_size
+            source_reg := io.tlMasterTransmitter.bits.a_source
+            add_reg := io.tlMasterTransmitter.bits.a_address
 
-        when(io.reqIn.valid){
+        }
+        .elsewhen(io.reqIn.valid.asBool && counter_host > 0.U && op_reg === Get.U){
+            counter_host := counter_host - 1.U
+
+            //io.tlMasterTransmitter.bits.a_opcode := 6.U
+            //io.tlMasterTransmitter.bits.a_data      := 0.U
+            //io.tlMasterTransmitter.bits.a_address   := 0.U
+            //io.tlMasterTransmitter.bits.a_param := 0.U
+            //io.tlMasterTransmitter.bits.a_source := 0.U
+            //io.tlMasterTransmitter.bits.a_size := 0.U
+            //io.tlMasterTransmitter.bits.a_mask := 0.U
+            //io.tlMasterTransmitter.bits.a_corrupt   := false.B
+            //io.tlMasterTransmitter.valid  := io.reqIn.valid
+            io.reqIn.ready           := false.B
+        }
+
+
+
+        .elsewhen(io.reqIn.valid.asBool && counter_host === 0.U){
+
+            op_reg := 6.U
+            param_reg := 0.U
+            size_reg := 0.U
+            source_reg := 0.U
+            add_reg := 0.U
+            counter_host := 0.U
 
             println("Request Valid Accepted")
             if (config.uh){
@@ -76,13 +124,27 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             }else{
                 io.tlMasterTransmitter.bits.a_param := 0.U
             }
-            io.tlMasterTransmitter.bits.a_source    := 2.U 
+            io.tlMasterTransmitter.bits.a_source    := 2.U
+
+            if(config.uh){
+                io.tlMasterTransmitter.bits.a_size := io.reqIn.bits.size.get
+
+                when(((1.U << io.tlMasterTransmitter.bits.a_size).asUInt > config.w.U)){
+                op_reg := io.tlMasterTransmitter.bits.a_opcode
+                param_reg := io.tlMasterTransmitter.bits.a_param
+                size_reg := io.tlMasterTransmitter.bits.a_size
+                source_reg := io.tlMasterTransmitter.bits.a_source
+                add_reg := io.tlMasterTransmitter.bits.a_address
+                counter_host := ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U)-1.U
+            }
+            }else{
             io.tlMasterTransmitter.bits.a_size      := MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
                                                                                     (1.U) -> 0.U,
                                                                                     (2.U) -> 1.U,
                                                                                     (4.U) -> 2.U,
                                                                                     (8.U) -> 3.U
                                                                                 ))
+            }
             io.tlMasterTransmitter.bits.a_mask      := io.reqIn.bits.activeByteLane
             io.tlMasterTransmitter.bits.a_corrupt   := false.B
             io.tlMasterTransmitter.valid            := io.reqIn.valid
@@ -91,6 +153,8 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             //io.tlSlaveReceiver.ready := true.B 
             addrReg := io.reqIn.bits.addrRequest
             io.reqIn.ready           := false.B
+
+            
         }
         
         

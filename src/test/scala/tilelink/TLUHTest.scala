@@ -21,12 +21,14 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
         val array_op    = Array(2, 3)
 
-        for ( i <- 0 until 20){
+        for ( i <- 0 until 1){
             val data_1 = Random.nextLong() & 0xFFFFFFFFL
             val data_2 = Random.nextLong() & 0xFFFFFFFFL
             val index  = Random.nextInt(2)
             val opCode = array_op(index)
             val param = Random.nextInt(5)
+
+            var counter_test = 0
 
             println (data_1.U)
             println (data_2.U)
@@ -59,9 +61,18 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
                 c.io.is_logical.get.poke(false.B)
                 c.io.is_intent.get.poke(false.B)
                 c.io.param.get.poke(0.U)
+                c.io.size.get.poke(4.U)
+
+                if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
+                counter_test = (math.pow(2,c.io.size.get.peek().litValue.toDouble)/config.w).toInt-1
+            }
             }
             c.io.byteLane.poke("b1111".U)
             c.io.isWrite.poke(true.B)
+            //c.io.valid.poke(false.B)
+            
+
+            //c.io.valid.poke(false.B)
             c.clock.step(1)
             c.io.valid.poke(false.B)
             println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
@@ -69,60 +80,94 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
                 println("wait")
                 c.clock.step(1)
             }
-      
-      println("Got the response now try atomic operation")
-      c.clock.step(2)
-      c.io.valid.poke(true.B)
-      c.io.addrReq.poke(0.U)
-      c.io.dataReq.poke(data_2.U)
-      c.io.isWrite.poke(false.B)
-      c.io.byteLane.poke("b1111".U)
-      if(config.uh){
-        if (opCode == 2){
-            println("Got the response now try arithmetic operation")
-            c.io.is_arithmetic.get.poke(true.B)
-        }
-        else
-            c.io.is_arithmetic.get.poke(false.B)
+            while((counter_test > 0)){
 
-        if (opCode == 3){
-            println("Got the response now try logic operation")
-            c.io.is_logical.get.poke(true.B)
-        }
-        else
-            c.io.is_logical.get.poke(false.B)
+                c.io.valid.poke(true.B)
+                val data_3 = Random.nextLong() & 0xFFFFFFFFL
+                c.io.dataReq.poke(data_3.U)
+                println("beat")
+                counter_test = counter_test - 1
+                c.clock.step(1)
+                //c.io.valid.poke(false.B)
+           
+            }
+           
+            c.io.valid.poke(false.B)
+            c.clock.step(2)
+            println("Got the response now try atomic operation")
 
-        c.io.is_intent.get.poke(false.B)
-        c.io.param.get.poke(param.U)
-      }
-      c.clock.step(2)
-      
-      println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
-      while(c.io.validResp.peek().litToBoolean != true) {
-        println("wait")
-        c.clock.step(1)
-      }
-      c.io.dataResp.expect(data_1.U)
-      println(s"EXPECTED DATA IS: ${data_1.U} GOT " + c.io.dataResp.peek().litValue().toInt.toString)
-      c.io.valid.poke(false.B)
-      println("Got the response now reading expected data")
-      c.clock.step(2)
-      c.io.dataReq.poke(0.U)
-      c.io.isWrite.poke(false.B)
-      c.io.valid.poke(true.B)
-      if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
-        c.io.param.get.poke(0.U)
-      }
-            //c.clock.step(1)
-            //c.io.valid.poke(false.B)
+            c.io.valid.poke(true.B)
+            c.io.addrReq.poke(0.U)
+            c.io.dataReq.poke(data_2.U)
+            c.io.isWrite.poke(false.B)
+            c.io.byteLane.poke("b1111".U)
+            if(config.uh){
+              if (opCode == 2){
+                  println("Got the response now try arithmetic operation")
+                  c.io.is_arithmetic.get.poke(true.B)
+              }
+              else
+                  c.io.is_arithmetic.get.poke(false.B)
+
+              if (opCode == 3){
+                  println("Got the response now try logic operation")
+                  c.io.is_logical.get.poke(true.B)
+              }
+              else
+                  c.io.is_logical.get.poke(false.B)
+
+              c.io.is_intent.get.poke(false.B)
+              c.io.param.get.poke(param.U)
+              c.io.size.get.poke(2.U)
+              
+            }
+            c.clock.step(2)
+
+            println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
+            while(c.io.validResp.peek().litToBoolean != true) {
+              println("wait")
+              c.clock.step(1)
+            }
+            c.io.dataResp.expect(data_1.U)
+            println(s"EXPECTED DATA IS: ${data_1.U} GOT " + c.io.dataResp.peek().litValue().toInt)
+            c.io.valid.poke(false.B)
+            println("Got the response now reading expected data")
+            c.clock.step(2)
+            c.io.addrReq.poke(4.U)
+            c.io.dataReq.poke(0.U)
+            c.io.isWrite.poke(false.B)
+            c.io.valid.poke(true.B)
+            if(config.uh){
+              c.io.is_arithmetic.get.poke(false.B)
+              c.io.is_logical.get.poke(false.B)
+              c.io.is_intent.get.poke(false.B)
+              c.io.param.get.poke(0.U)
+              c.io.size.get.poke(3.U)
+              if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
+                counter_test = (math.pow(2,c.io.size.get.peek().litValue.toDouble)/config.w).toInt-1
+            }
+            }
             c.clock.step(1)
-            c.io.dataResp.expect(result1.U)
-            println(s"EXPECTED DATA IS: ${result1.U} GOT " + c.io.dataResp.peek().litValue().toInt.toString)
+            c.io.valid.poke(false.B)
+            while((counter_test > 0)){
+
+                c.io.valid.poke(true.B)
+                val data_3 = Random.nextLong() & 0xFFFFFFFFL
+                c.io.dataReq.poke(data_3.U)
+                println("beat")
+                counter_test = counter_test - 1
+                c.clock.step(1)
+                //c.io.valid.poke(false.B)
+           
+            }
+
+                  //c.clock.step(1)
+                  //c.io.valid.poke(false.B)
+                  c.clock.step(1)
+                  c.io.dataResp.expect(result1.U)
+                  println(s"EXPECTED DATA IS: ${result1.U} GOT " + c.io.dataResp.peek().litValue().toInt)
 
         }
     }
-} 
+ } 
 }

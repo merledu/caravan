@@ -15,6 +15,11 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     val stateReg = RegInit(idle)
     val rspData = RegInit(0.U)
 
+    val add_reg_D = RegInit(0.U)
+    val mask_reg_D = RegInit(0.U)
+    val counter_D = RegInit(UInt((config.z/config.w).W),0.U)
+    val op_reg_D = RegInit(6.U)
+
     io.tlMasterReceiver.ready := true.B
     io.rspIn.ready := false.B
 
@@ -23,6 +28,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     io.reqOut.bits.is_logical.get := false.B
     io.reqOut.bits.is_intent.get := false.B
     io.reqOut.bits.param.get := 0.U
+    io.reqOut.bits.size.get := 0.U
     }
 
     io.reqOut.bits.addrRequest      := 0.U
@@ -50,6 +56,10 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     when(config.uh.asBool() && io.tlMasterReceiver.bits.a_opcode =/= PutFullData.U && io.tlMasterReceiver.bits.a_opcode =/= PutPartialData.U && io.tlMasterReceiver.bits.a_opcode =/= Get.U){
        //val idle :: wait_for_resp :: Nil = Enum(2)
        //val stateReg = RegInit(idle)
+        add_reg_D := 0.U
+        mask_reg_D := 0.U
+        counter_D := 0.U
+        op_reg_D := 6.U
        when(stateReg === idle){
         when(io.tlMasterReceiver.valid){
 
@@ -117,7 +127,19 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
        }
 
     }.otherwise{
-        when(io.tlMasterReceiver.valid){
+        when(config.uh.asBool && counter_D > 0.U && op_reg_D === Get.U){
+            io.reqOut.bits.addrRequest := add_reg_D + config.w.U
+            io.reqOut.bits.activeByteLane := mask_reg_D
+            io.reqOut.bits.isWrite := false.B
+            counter_D := counter_D -1.U
+            io.reqOut.valid := true.B
+            io.rspIn.ready := true.B
+            
+        }
+        .elsewhen(io.tlMasterReceiver.valid){
+            op_reg_D := 6.U
+            add_reg_D := 0.U
+            mask_reg_D := 0.U
 
             io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
             io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
@@ -128,15 +150,38 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             //stateReg := wait_for_resp
             io.rspIn.ready := true.B
 
+            when(((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U) && io.tlMasterReceiver.bits.a_opcode === Get.U){
+                op_reg_D := io.tlMasterReceiver.bits.a_opcode
+                add_reg_D := io.tlMasterReceiver.bits.a_address
+                mask_reg_D := io.tlMasterReceiver.bits.a_mask
+                counter_D := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt /config.w.U)-1.U 
+            }
+
         }
 
         //}.elsewhen(stateReg === wait_for_resp){
 
         // io.rspIn.ready := true.B
 
-        when(io.rspIn.valid){
+        when(io.rspIn.valid && config.uh.asBool && counter_D > 0.U && op_reg_D =/= Get.U){
+            counter_D := counter_D -1.U
 
-            io.tlSlaveTransmitter.bits.d_opcode := AccessAckData.U
+            io.tlSlaveTransmitter.bits.d_opcode := 3.U
+            io.tlSlaveTransmitter.bits.d_data := 0.U
+            io.tlSlaveTransmitter.bits.d_param := 0.U
+            io.tlSlaveTransmitter.bits.d_size := 0.U
+            io.tlSlaveTransmitter.bits.d_source := 0.U
+            io.tlSlaveTransmitter.bits.d_sink := 0.U
+            io.tlSlaveTransmitter.bits.d_denied := 0.U      // d_denied pin is used for representing Mem error
+            io.tlSlaveTransmitter.bits.d_corrupt := 0.U
+            io.tlSlaveTransmitter.valid := 0.U
+        }
+        .elsewhen(io.rspIn.valid){
+
+            when(io.tlMasterReceiver.bits.a_opcode === Get.U){
+                io.tlSlaveTransmitter.bits.d_opcode := AccessAck.U
+            }.otherwise{
+            io.tlSlaveTransmitter.bits.d_opcode := AccessAckData.U}
             io.tlSlaveTransmitter.bits.d_data := io.rspIn.bits.dataResponse
             io.tlSlaveTransmitter.bits.d_param := 0.U
             io.tlSlaveTransmitter.bits.d_size := io.tlMasterReceiver.bits.a_size
@@ -145,9 +190,16 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             io.tlSlaveTransmitter.bits.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
             io.tlSlaveTransmitter.bits.d_corrupt := 0.U
             io.tlSlaveTransmitter.valid := io.rspIn.valid
-            io.reqOut.valid := false.B
+            //io.reqOut.valid := false.B
+
+            when(((1.U << io.tlMasterReceiver.bits.a_size).asUInt > config.w.U) && io.tlMasterReceiver.bits.a_opcode =/= Get.U){
+                counter_D := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt /config.w.U)-1.U
+                op_reg_D := io.tlMasterReceiver.bits.a_opcode
+            }
             //stateReg := idle
             io.rspIn.ready := false.B
+
+            
         }
 
     }
