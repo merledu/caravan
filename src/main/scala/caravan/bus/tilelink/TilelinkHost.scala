@@ -164,7 +164,6 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
        // io.reqIn.ready           := false.B
 
         when(io.tlSlaveReceiver.valid){
-            println("Valid Recieved")
             //io.tlSlaveReceiver.ready := false.B
             //io.reqIn.ready           := false.B
             io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data  
