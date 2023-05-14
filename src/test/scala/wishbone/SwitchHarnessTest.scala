@@ -12,7 +12,7 @@ import common.MemoryDumpFileHelper // necessary to import
 
 class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
 
-  "should write to all GPIO registers and read them back" in {
+  "wishbone should write to all GPIO registers and read them back" in {
     implicit val config = WishboneConfig(32, 32)
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -91,7 +91,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
     }
   }
 
-  "should write to a false GPIO register and produce error" in {
+  "wishbone should write to a false GPIO register and produce error" in {
     implicit val config = WishboneConfig(32, 32)
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -123,7 +123,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
   // "should write data to multiple rows and read them back from memory" in {
   //   implicit val config = WishboneConfig(32, 32)
   //   val programFile = getFile
-  //   test(new SwitchHarness(programFile)).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+  //   test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
   //     c.clock.step(5)
   //     sendRequestToMem("h40000000".U, "h00100120".U, "b1111".U, true.B)
   //     println("VALID RESPONSE = " + c.io.validResp.peek().litToBoolean.toString)
@@ -198,7 +198,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
   //   }
   // }
 
-  "should write to a device that is not in memory map and produce error" in {
+  "wishbone should write to a device that is not in memory map and produce error" in {
     implicit val config = WishboneConfig(32, 32)
     // val programFile = getFile
     test(new SwitchHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>

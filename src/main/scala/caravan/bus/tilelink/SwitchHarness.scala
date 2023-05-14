@@ -20,6 +20,8 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
     val ackResp = Output(Bool())
   })
 
+  Peripherals.addValuesFromJson("peripherals.json")
+
   io.ackResp := false.B
   implicit val request = new TLRequest()
   implicit val response = new TLResponse()
@@ -32,8 +34,8 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   val tlErr = Module(new TilelinkError())
 
   val addressMap = new AddressMap
-  addressMap.addDevice(Peripherals.DCCM, "h40000000".U(32.W), "h00000fff".U(32.W), dccmDev)
-  addressMap.addDevice(Peripherals.GPIO, "h40001000".U(32.W), "h00000fff".U(32.W), gpioDev)
+  addressMap.addDevice(Peripherals.get("DCCM"), "h40000000".U(32.W), "h00000fff".U(32.W), dccmDev)
+  addressMap.addDevice(Peripherals.get("GPIO"), "h40001000".U(32.W), "h00000fff".U(32.W), gpioDev)
   val devices = addressMap.getDevices
 
   val switch = Module(new Switch1toN[TLHost, TLDevice](new TilelinkMaster(), new TilelinkSlave(), devices.size))
