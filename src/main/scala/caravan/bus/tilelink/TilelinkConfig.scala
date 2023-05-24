@@ -22,7 +22,7 @@ case class TilelinkConfig
     val i: Int = 1,
 
     // TL-UH
-    val uh : Boolean = true
+    val uh : Boolean = false
 
 ) extends BusConfig
 

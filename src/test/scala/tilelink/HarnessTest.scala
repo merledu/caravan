@@ -133,7 +133,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
     }
   }
   "should write and read full word with TL-UH Arithmetic ADD" in {
-    implicit val config = TilelinkConfig()
+    implicit val config = TilelinkConfig(uh = true)
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -202,7 +202,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   }
 
   "should write and read full word with TL-UH Arithmetic MAXU" in {
-    implicit val config = TilelinkConfig()
+    implicit val config = TilelinkConfig(uh = true)
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -271,7 +271,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   }
 
   "should write and read full word with TL-UH Logical OR" in {
-    implicit val config = TilelinkConfig()
+    implicit val config = TilelinkConfig(uh = true)
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -340,7 +340,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
   }
 
   "should write and read full word with TL-UH Logical SWAP" in {
-    implicit val config = TilelinkConfig()
+    implicit val config = TilelinkConfig(uh = true)
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)

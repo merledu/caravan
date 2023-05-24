@@ -15,7 +15,7 @@ import common.MemoryDumpFileHelper // necessary to import
 
 class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
     "TL-UH Tests" in {
-        implicit val config = TilelinkConfig()
+        implicit val config = TilelinkConfig(uh = true)
     // val programFile = getFile
 
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
@@ -85,7 +85,6 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
                 c.io.valid.poke(true.B)
                 val data_3 = Random.nextLong() & 0xFFFFFFFFL
                 c.io.dataReq.poke(data_3.U)
-                println("beat")
                 counter_test = counter_test - 1
                 c.clock.step(1)
                 //c.io.valid.poke(false.B)
@@ -118,7 +117,7 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
 
               c.io.is_intent.get.poke(false.B)
               c.io.param.get.poke(param.U)
-              c.io.size.get.poke(2.U)
+              c.io.size.get.poke(4.U)
               
             }
             c.clock.step(2)
@@ -133,7 +132,7 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             c.io.valid.poke(false.B)
             println("Got the response now reading expected data")
             c.clock.step(2)
-            c.io.addrReq.poke(4.U)
+            c.io.addrReq.poke(0.U)
             c.io.dataReq.poke(0.U)
             c.io.isWrite.poke(false.B)
             c.io.valid.poke(true.B)
@@ -142,7 +141,7 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
               c.io.is_logical.get.poke(false.B)
               c.io.is_intent.get.poke(false.B)
               c.io.param.get.poke(0.U)
-              c.io.size.get.poke(3.U)
+              c.io.size.get.poke(4.U)
               if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
                 counter_test = (math.pow(2,c.io.size.get.peek().litValue.toDouble)/config.w).toInt-1
             }
@@ -154,7 +153,6 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
                 c.io.valid.poke(true.B)
                 val data_3 = Random.nextLong() & 0xFFFFFFFFL
                 c.io.dataReq.poke(data_3.U)
-                println("beat")
                 counter_test = counter_test - 1
                 c.clock.step(1)
                 //c.io.valid.poke(false.B)

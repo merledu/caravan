@@ -63,7 +63,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         // stateReg := Mux(io.reqIn.valid, process_data, idle)
     // }.elsewhen(stateReg === process_data){
 
-        when(io.reqIn.valid.asBool && counter_host > 0.U && op_reg =/= Get.U && op_reg =/= Intent.U){
+        when(counter_host > 0.U && op_reg =/= Get.U && op_reg =/= Intent.U){
             io.tlMasterTransmitter.bits.a_opcode := op_reg
             io.tlMasterTransmitter.bits.a_param := param_reg
             io.tlMasterTransmitter.bits.a_size := size_reg
@@ -82,7 +82,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             add_reg := io.tlMasterTransmitter.bits.a_address
 
         }
-        .elsewhen(io.reqIn.valid.asBool && counter_host > 0.U && op_reg === Get.U){
+        .elsewhen(counter_host > 0.U && op_reg === Get.U){
             counter_host := counter_host - 1.U
 
             //io.tlMasterTransmitter.bits.a_opcode := 6.U
@@ -99,7 +99,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
 
 
 
-        .elsewhen(io.reqIn.valid.asBool && counter_host === 0.U){
+        .elsewhen(counter_host === 0.U){
 
             op_reg := 6.U
             param_reg := 0.U
