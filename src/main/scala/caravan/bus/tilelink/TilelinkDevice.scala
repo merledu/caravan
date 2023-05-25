@@ -17,11 +17,12 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
     val add_reg_D = RegInit(0.U)
     val mask_reg_D = RegInit(0.U)
-    val counter_D = RegInit(UInt((config.z/config.w).W),0.U)
+    val counter_D = RegInit(UInt(config.z.W),0.U)
     val op_reg_D = RegInit(6.U)
 
     io.tlMasterReceiver.ready := true.B
     io.rspIn.ready := false.B
+    dontTouch(io.rspIn.ready)
 
     if (config.uh){
     io.reqOut.bits.is_arithmetic.get := false.B
@@ -52,30 +53,43 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     when(stateReg =/= idle){
         stateReg := idle
     }
+    when(counter_D === 0.U){
+        op_reg_D := 6.U
+        add_reg_D := 0.U
+        mask_reg_D := 0.U
+    }
 
     when(config.uh.asBool() && io.tlMasterReceiver.bits.a_opcode =/= PutFullData.U && io.tlMasterReceiver.bits.a_opcode =/= PutPartialData.U && io.tlMasterReceiver.bits.a_opcode =/= Get.U){
        //val idle :: wait_for_resp :: Nil = Enum(2)
        //val stateReg = RegInit(idle)
-        add_reg_D := 0.U
-        mask_reg_D := 0.U
-        counter_D := 0.U
-        op_reg_D := 6.U
        when(stateReg === idle){
         when(io.tlMasterReceiver.valid){
 
-            io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
+            when(op_reg_D =/= 6.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
+                io.reqOut.bits.addrRequest := add_reg_D + config.w.U
+                add_reg_D := add_reg_D + config.w.U
+                counter_D := counter_D - 1.U
+            }.otherwise{
+                io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
+            }
             io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
             io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask
             io.reqOut.bits.isWrite := false.B
             io.reqOut.valid := true.B
+            io.rspIn.ready := true.B
             stateReg := uh
+            when(op_reg_D === 6.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
+                add_reg_D := io.tlMasterReceiver.bits.a_address
+                op_reg_D := io.tlMasterReceiver.bits.a_opcode
+                counter_D := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() / config.w.U)- 1.U
+            }
         }
        }
        .elsewhen(stateReg === uh){
         io.reqOut.valid := false.B
         io.rspIn.ready := true.B
         when(io.rspIn.valid){
-                io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
+                io.reqOut.bits.addrRequest := add_reg_D
                 io.reqOut.bits.dataRequest := MuxCase(io.rspIn.bits.dataResponse,  Array(
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 0.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
                                                                                                                                                                                                 io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
@@ -85,7 +99,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
                                                                                                                                                                                                 io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse),
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 3.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
                                                                                                                                                                                                 io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data),
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 4.U) -> (io.tlMasterReceiver.bits.a_data.asUInt + io.rspIn.bits.dataResponse.asUInt).asUInt,
+                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 4.U) -> (io.tlMasterReceiver.bits.a_data + io.rspIn.bits.dataResponse),
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 0.U) -> (io.tlMasterReceiver.bits.a_data ^ io.rspIn.bits.dataResponse).asUInt,
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 1.U) -> (io.tlMasterReceiver.bits.a_data | io.rspIn.bits.dataResponse).asUInt,
                                                                                         (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 2.U) -> (io.tlMasterReceiver.bits.a_data & io.rspIn.bits.dataResponse).asUInt,
@@ -96,6 +110,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
                 io.reqOut.valid := true.B
                 rspData := io.rspIn.bits.dataResponse
                 stateReg := wait_for_resp
+                
         }
        }
 
@@ -105,14 +120,9 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
             when(io.rspIn.valid){
                 io.rspIn.ready := false.B
-
-                io.tlSlaveTransmitter.bits.d_opcode := MuxCase(0.U, Array(
-                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U || io.tlMasterReceiver.bits.a_opcode === Logical.U 
-                                                                        ) -> AccessAckData.U,
-                                                                        (io.tlMasterReceiver.bits.a_opcode === Intent.U) -> HintAck.U,
-                                                                        ))
-                io.tlSlaveTransmitter.bits.d_data := MuxCase(io.rspIn.bits.dataResponse, Array(
-                                                                    (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U || io.tlMasterReceiver.bits.a_opcode === Logical.U) -> rspData))
+                io.tlSlaveTransmitter.bits.d_opcode := AccessAckData.U
+                                                                        
+                io.tlSlaveTransmitter.bits.d_data := rspData
                 io.tlSlaveTransmitter.bits.d_param := 0.U
                 io.tlSlaveTransmitter.bits.d_size := io.tlMasterReceiver.bits.a_size
                 io.tlSlaveTransmitter.bits.d_source := io.tlMasterReceiver.bits.a_source
@@ -128,18 +138,17 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
     }.otherwise{
         when(config.uh.asBool && counter_D > 0.U && op_reg_D === Get.U){
-            io.reqOut.bits.addrRequest := add_reg_D + config.w.U
+            io.reqOut.bits.addrRequest :=  add_reg_D + config.w.U
             io.reqOut.bits.activeByteLane := mask_reg_D
             io.reqOut.bits.isWrite := false.B
             counter_D := counter_D -1.U
             io.reqOut.valid := true.B
             io.rspIn.ready := true.B
+            add_reg_D := io.reqOut.bits.addrRequest
+           
             
         }
         .elsewhen(io.tlMasterReceiver.valid){
-            op_reg_D := 6.U
-            add_reg_D := 0.U
-            mask_reg_D := 0.U
 
             io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
             io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
@@ -156,14 +165,16 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
                 mask_reg_D := io.tlMasterReceiver.bits.a_mask
                 counter_D := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt /config.w.U)-1.U 
             }
+            
 
         }
 
         //}.elsewhen(stateReg === wait_for_resp){
 
         // io.rspIn.ready := true.B
-
+       
         when(io.rspIn.valid && config.uh.asBool && counter_D > 0.U && op_reg_D =/= Get.U){
+            io.rspIn.ready := false.B
             counter_D := counter_D -1.U
 
             io.tlSlaveTransmitter.bits.d_opcode := 3.U
