@@ -50,20 +50,30 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     io.rspOut.bits.error                    := 0.U
     // io.rspOut.bits.ackWrite                 := 0.U
     io.rspOut.valid                         := false.B
-    //when(stateReg === idle){
-        // stateReg := Mux(io.reqIn.valid, process_data, idle)
-    // }.elsewhen(stateReg === process_data){
-        when(~(io.reqIn.valid.asBool) && counter_host > 0.U){
-            counter_host := 0.U
-        }
-        when(io.reqIn.valid.asBool && counter_host > 0.U && op_reg =/= Get.U && op_reg =/= Intent.U){
+
+    when(~(io.reqIn.valid) && counter_host > 0.U){
+        counter_host := 0.U
+    }
+    when(counter_host === 0.U){
+        op_reg := 6.U
+        param_reg := 0.U
+        size_reg := 0.U
+        source_reg := 0.U
+        add_reg := 0.U
+        counter_host := 0.U
+    }
+    
+    
+    when(io.reqIn.valid){
+        when(config.uh.asBool && counter_host > 0.U){
+        when(op_reg =/= Get.U){
             io.tlMasterTransmitter.bits.a_opcode := op_reg
             io.tlMasterTransmitter.bits.a_param := param_reg
             io.tlMasterTransmitter.bits.a_size := size_reg
             io.tlMasterTransmitter.bits.a_source := source_reg
-
             when(op_reg =/= Arithmetic.U && op_reg =/= Logical.U){
                 io.tlMasterTransmitter.bits.a_address := add_reg + config.w.U
+                add_reg := add_reg + config.w.U
             }
             .otherwise{
                 io.tlMasterTransmitter.bits.a_address := add_reg
@@ -74,98 +84,73 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
             io.tlMasterTransmitter.valid            := io.reqIn.valid
             io.reqIn.ready           := false.B
             counter_host := counter_host - 1.U
-            op_reg := io.tlMasterTransmitter.bits.a_opcode
-            param_reg := io.tlMasterTransmitter.bits.a_param
-            size_reg := io.tlMasterTransmitter.bits.a_size
-            source_reg := io.tlMasterTransmitter.bits.a_source
-            add_reg := io.tlMasterTransmitter.bits.a_address
         }
-        .elsewhen(io.reqIn.valid.asBool && counter_host > 0.U && op_reg === Get.U){
+        .elsewhen(op_reg === Get.U){
             counter_host := counter_host - 1.U
-            //io.tlMasterTransmitter.bits.a_opcode := op_reg
-            //io.tlMasterTransmitter.bits.a_data      := 0.U
-            //io.tlMasterTransmitter.bits.a_address   := 0.U
-            //io.tlMasterTransmitter.bits.a_param := 0.U
-            //io.tlMasterTransmitter.bits.a_source := 0.U
-            //io.tlMasterTransmitter.bits.a_size := 0.U
-            //io.tlMasterTransmitter.bits.a_mask := 0.U
-            //io.tlMasterTransmitter.bits.a_corrupt   := false.B
-            io.tlMasterTransmitter.valid  := io.reqIn.valid
-            //io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
-            //io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
             io.reqIn.ready           := false.B
         }
-        .elsewhen(io.reqIn.valid){
-            op_reg := 6.U
-            param_reg := 0.U
-            size_reg := 0.U
-            source_reg := 0.U
-            add_reg := 0.U
-            counter_host := 0.U
-            if (config.uh){
-                io.tlMasterTransmitter.bits.a_opcode    := Mux1H(Cat(io.reqIn.bits.is_intent.get,io.reqIn.bits.is_logical.get,io.reqIn.bits.is_arithmetic.get,~(io.reqIn.bits.is_intent.get | io.reqIn.bits.is_logical.get | io.reqIn.bits.is_arithmetic.get))
-                                                            ,Seq(Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U),Arithmetic.U,Logical.U,Intent.U
-                                                            ))
-            }else{
-                io.tlMasterTransmitter.bits.a_opcode := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)
-            }
-            io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
-            io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
-            if (config.uh){
-                io.tlMasterTransmitter.bits.a_param     := io.reqIn.bits.param.get.asUInt
-            }else{
-                io.tlMasterTransmitter.bits.a_param := 0.U
-            }
-            io.tlMasterTransmitter.bits.a_source    := 2.U
-            if(config.uh){
-                io.tlMasterTransmitter.bits.a_size := io.reqIn.bits.size.get
-                when(((1.U << io.tlMasterTransmitter.bits.a_size).asUInt > config.w.U)){
-                    op_reg := io.tlMasterTransmitter.bits.a_opcode
-                    param_reg := io.tlMasterTransmitter.bits.a_param
-                    size_reg := io.tlMasterTransmitter.bits.a_size
-                    source_reg := io.tlMasterTransmitter.bits.a_source
-                    add_reg := io.tlMasterTransmitter.bits.a_address
-                    when(io.tlMasterTransmitter.bits.a_opcode === Arithmetic.U || io.tlMasterTransmitter.bits.a_opcode === Logical.U){
-                        counter_host := 3.U * ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U).asUInt
-                    }
-                    .otherwise{
-                        counter_host := ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U)-1.U
-                    }
-            }
-            }else{
-            io.tlMasterTransmitter.bits.a_size      := MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
-                                                                                    (1.U) -> 0.U,
-                                                                                    (2.U) -> 1.U,
-                                                                                    (4.U) -> 2.U,
-                                                                                    (8.U) -> 3.U
-                                                                                ))
-            }
-            io.tlMasterTransmitter.bits.a_mask      := io.reqIn.bits.activeByteLane
-            io.tlMasterTransmitter.bits.a_corrupt   := false.B
-            io.tlMasterTransmitter.valid            := io.reqIn.valid
-            //stateReg := wait_for_resp
-            //io.tlSlaveReceiver.ready := true.B
-            //addrReg := io.reqIn.bits.addrRequest
-            io.reqIn.ready           := false.B
+    }.otherwise{
+       
+        if (config.uh){
+            io.tlMasterTransmitter.bits.a_opcode    := Mux1H(Cat(io.reqIn.bits.is_intent.get,io.reqIn.bits.is_logical.get,io.reqIn.bits.is_arithmetic.get,~(io.reqIn.bits.is_intent.get | io.reqIn.bits.is_logical.get | io.reqIn.bits.is_arithmetic.get))
+                                                        ,Seq(Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U),Arithmetic.U,Logical.U,Intent.U
+                                                        ))
+        }else{
+            io.tlMasterTransmitter.bits.a_opcode := Mux(io.reqIn.bits.isWrite, Mux(io.reqIn.bits.activeByteLane === "b1111".U, PutFullData.U, PutPartialData.U) , Get.U)
         }
-    //}.elsewhen(stateReg === wait_for_resp){
-       // io.tlSlaveReceiver.ready := true.B
-       // io.reqIn.ready           := false.B
-        when(io.tlSlaveReceiver.valid){
-            //io.tlSlaveReceiver.ready := false.B
-            //io.reqIn.ready           := false.B
-            io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data
-            io.rspOut.bits.error := io.tlSlaveReceiver.bits.d_denied
-            // io.rspOut.bits.ackWrite := io.tlSlaveReceiver.bits.d_opcode === AccessAckData.U
-            io.rspOut.valid := io.tlSlaveReceiver.valid
-            //stateReg := idle
-            io.tlSlaveReceiver.ready := false.B
-            when(counter_host > 0.U){
-                io.reqIn.ready := false.B
-            }.otherwise{
-                io.reqIn.ready           := true.B
-            }
+        io.tlMasterTransmitter.bits.a_data      := io.reqIn.bits.dataRequest
+        io.tlMasterTransmitter.bits.a_address   := io.reqIn.bits.addrRequest
+        if (config.uh){
+            io.tlMasterTransmitter.bits.a_param     := io.reqIn.bits.param.get.asUInt
+        }else{
+            io.tlMasterTransmitter.bits.a_param := 0.U
         }
+        io.tlMasterTransmitter.bits.a_source    := 2.U
+        if(config.uh){
+            io.tlMasterTransmitter.bits.a_size := io.reqIn.bits.size.get
+            when(((1.U << io.tlMasterTransmitter.bits.a_size).asUInt > config.w.U)){
+                op_reg := io.tlMasterTransmitter.bits.a_opcode
+                param_reg := io.tlMasterTransmitter.bits.a_param
+                size_reg := io.tlMasterTransmitter.bits.a_size
+                source_reg := io.tlMasterTransmitter.bits.a_source
+                add_reg := io.tlMasterTransmitter.bits.a_address
+                when(io.tlMasterTransmitter.bits.a_opcode === Arithmetic.U || io.tlMasterTransmitter.bits.a_opcode === Logical.U){
+                    counter_host := 3.U * ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U).asUInt - 1.U
+                }
+                .otherwise{
+                    counter_host := ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U)-1.U
+                }
+        }
+        }else{
+        io.tlMasterTransmitter.bits.a_size      := MuxLookup(config.w.U, 2.U,Array(                    // default 32-bit
+                                                                                (1.U) -> 0.U,
+                                                                                (2.U) -> 1.U,
+                                                                                (4.U) -> 2.U,
+                                                                                (8.U) -> 3.U
+                                                                            ))
+        }
+        io.tlMasterTransmitter.bits.a_mask      := io.reqIn.bits.activeByteLane
+        io.tlMasterTransmitter.bits.a_corrupt   := false.B
+        io.tlMasterTransmitter.valid            := io.reqIn.valid
+       
+        io.reqIn.ready           := false.B
+    }
+    }
+    
+    when(io.tlSlaveReceiver.valid){
+        
+        io.rspOut.bits.dataResponse := io.tlSlaveReceiver.bits.d_data
+        io.rspOut.bits.error := io.tlSlaveReceiver.bits.d_denied
+     
+        io.rspOut.valid := io.tlSlaveReceiver.valid
+      
+        io.tlSlaveReceiver.ready := false.B
+        when(counter_host > 0.U){
+            io.reqIn.ready := false.B
+        }.otherwise{
+            io.reqIn.ready           := true.B
+        }
+    }
         /*.elsewhen(io.tlSlaveReceiver.ready){
             println("Valid Not Recieved")
             io.reqIn.ready := false.B

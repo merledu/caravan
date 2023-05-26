@@ -50,22 +50,19 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     
     // val stall = Module(new stallUnit)
 
-    when(stateReg =/= idle){
-        stateReg := idle
-    }
     when(counter_D === 0.U){
         op_reg_D := 6.U
         add_reg_D := 0.U
         mask_reg_D := 0.U
     }
 
-    when(config.uh.asBool() && io.tlMasterReceiver.bits.a_opcode =/= PutFullData.U && io.tlMasterReceiver.bits.a_opcode =/= PutPartialData.U && io.tlMasterReceiver.bits.a_opcode =/= Get.U){
-       //val idle :: wait_for_resp :: Nil = Enum(2)
-       //val stateReg = RegInit(idle)
+    when(config.uh.asBool() && (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U 
+        || io.tlMasterReceiver.bits.a_opcode === Logical.U )){
+       
        when(stateReg === idle){
         when(io.tlMasterReceiver.valid){
 
-            when(op_reg_D =/= 6.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
+            when(counter_D > 0.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
                 io.reqOut.bits.addrRequest := add_reg_D + config.w.U
                 add_reg_D := add_reg_D + config.w.U
                 counter_D := counter_D - 1.U
@@ -78,9 +75,8 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             io.reqOut.valid := true.B
             io.rspIn.ready := true.B
             stateReg := uh
-            when(op_reg_D === 6.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
+            when(counter_D === 0.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
                 add_reg_D := io.tlMasterReceiver.bits.a_address
-                op_reg_D := io.tlMasterReceiver.bits.a_opcode
                 counter_D := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() / config.w.U)- 1.U
             }
         }
@@ -149,7 +145,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             
         }
         .elsewhen(io.tlMasterReceiver.valid){
-
+            
             io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
             io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
             io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask

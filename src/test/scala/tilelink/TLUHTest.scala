@@ -94,7 +94,7 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             index_counter += 1
             while((counter_test > 0)){
                 c.io.valid.poke(true.B)
-                c.io.addrReq.poke((c.io.addrReq.peek().litValue+config.w).asUInt)
+                //c.io.addrReq.poke((c.io.addrReq.peek().litValue+config.w).asUInt)
                 c.io.dataReq.poke(data1(index_counter).U)
                 counter_test = counter_test - 1
                 index_counter += 1
@@ -141,7 +141,7 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             index_counter += 1
             while((counter_test > 0)){
                 c.io.dataReq.poke(data2(index_counter).U)
-                c.io.addrReq.poke((c.io.addrReq.peek().litValue+config.w).asUInt)
+                //c.io.addrReq.poke((c.io.addrReq.peek().litValue+config.w).asUInt)
                 counter_test = counter_test - 1
                 c.clock.step(2)
                 println(s"VALID RESPONSE FOR ATOMIC BEAT${index_counter} = " + c.io.validResp.peek().litToBoolean.toString)
