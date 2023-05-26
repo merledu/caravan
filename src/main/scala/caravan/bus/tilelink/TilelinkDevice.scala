@@ -51,14 +51,17 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     // val stall = Module(new stallUnit)
 
     when(counter_D === 0.U){
-        op_reg_D := 6.U
+        when(io.tlMasterReceiver.valid){
+            op_reg_D := io.tlMasterReceiver.bits.a_opcode
+        }.otherwise{
+            op_reg_D := 6.U
+        }
         add_reg_D := 0.U
         mask_reg_D := 0.U
     }
 
-    when(config.uh.asBool() && (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U 
-        || io.tlMasterReceiver.bits.a_opcode === Logical.U )){
-       
+    when(config.uh.asBool() && (op_reg_D === Arithmetic.U 
+        || op_reg_D === Logical.U )){
        when(stateReg === idle){
         when(io.tlMasterReceiver.valid){
 
@@ -140,7 +143,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             counter_D := counter_D -1.U
             io.reqOut.valid := true.B
             io.rspIn.ready := true.B
-            add_reg_D := io.reqOut.bits.addrRequest
+            add_reg_D := add_reg_D + config.w.U
            
             
         }
