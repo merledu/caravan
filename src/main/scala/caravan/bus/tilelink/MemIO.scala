@@ -12,9 +12,9 @@ class MemRequestIO(implicit val config: TilelinkConfig) extends Bundle {
   val dataRequest: UInt = Input(UInt(32.W))
   val activeByteLane: UInt = Input(UInt(4.W))
   val isWrite: Bool = Input(Bool())
-  val is_arithmetic = if(config.uh) Some(Bool()) else None
-  val is_logical = if(config.uh) Some(Bool()) else None
-  val is_intent = if(config.uh) Some(Bool()) else None 
+  val isArithmetic = if(config.uh) Some(Bool()) else None
+  val isLogical = if(config.uh) Some(Bool()) else None
+  val isIntent = if(config.uh) Some(Bool()) else None 
   val param = if(config.uh) Some(UInt(3.W)) else None
   val size = if (config.uh) Some(UInt(config.z.W)) else None
 

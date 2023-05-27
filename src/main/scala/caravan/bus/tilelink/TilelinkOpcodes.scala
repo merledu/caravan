@@ -10,4 +10,5 @@ trait OpCodes {
     val Logical = 3
     val Intent = 5
     val HintAck = 2
+    val NoOp = 6
 }

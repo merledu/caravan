@@ -50,9 +50,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(8.U)
       c.io.dataReq.poke(0.U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -96,9 +96,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(8.U)
       c.io.dataReq.poke("habcdefbf".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -133,7 +133,7 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
     }
   }
   "should write and read full word with TL-UH Arithmetic ADD" in {
-    implicit val config = TilelinkConfig(uh = true)
+    implicit val config = TilelinkConfig(uh = true, z = 8)
     // val programFile = getFile
     test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
       c.clock.step(5)
@@ -141,9 +141,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(24.U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -165,9 +165,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.byteLane.poke("b1111".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(true.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(true.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(4.U)
         c.io.size.get.poke(2.U)
       }
@@ -187,9 +187,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.valid.poke(true.B)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -210,9 +210,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(24.U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -234,9 +234,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.byteLane.poke("b1111".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(true.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(true.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(3.U)
         c.io.size.get.poke(2.U)
       }
@@ -256,9 +256,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.valid.poke(true.B)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -279,9 +279,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(46.U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -303,9 +303,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.byteLane.poke("b1111".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(true.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(true.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(1.U)
         c.io.size.get.poke(2.U)
       }
@@ -325,9 +325,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.valid.poke(true.B)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -348,9 +348,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.addrReq.poke(0.U)
       c.io.dataReq.poke(46.U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }
@@ -372,9 +372,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.byteLane.poke("b1111".U)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(true.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(true.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(3.U)
         c.io.size.get.poke(2.U)
       }
@@ -394,9 +394,9 @@ class HarnessTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFil
       c.io.isWrite.poke(false.B)
       c.io.valid.poke(true.B)
       if(config.uh){
-        c.io.is_arithmetic.get.poke(false.B)
-        c.io.is_logical.get.poke(false.B)
-        c.io.is_intent.get.poke(false.B)
+        c.io.isArithmetic.get.poke(false.B)
+        c.io.isLogical.get.poke(false.B)
+        c.io.isIntent.get.poke(false.B)
         c.io.param.get.poke(0.U)
         c.io.size.get.poke(2.U)
       }

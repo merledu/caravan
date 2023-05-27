@@ -14,9 +14,9 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
     val dataReq = Input(UInt((config.w * 8).W))
     val byteLane = Input(UInt(config.w.W))
     val isWrite = Input(Bool())
-    val is_arithmetic = if(config.uh) Some(Input(Bool())) else None
-    val is_logical = if(config.uh) Some(Input(Bool())) else None
-    val is_intent = if(config.uh) Some(Input(Bool())) else None 
+    val isArithmetic = if(config.uh) Some(Input(Bool())) else None
+    val isLogical = if(config.uh) Some(Input(Bool())) else None
+    val isIntent = if(config.uh) Some(Input(Bool())) else None 
     val param = if(config.uh) Some(Input(UInt(3.W))) else None
     val size = if (config.uh) Some(Input(UInt(config.z.W))) else None
 
@@ -45,9 +45,9 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
   tlHost.io.reqIn.bits.activeByteLane := io.byteLane
   tlHost.io.reqIn.bits.isWrite := io.isWrite
   if (config.uh){
-    tlHost.io.reqIn.bits.is_arithmetic.get := io.is_arithmetic.get
-    tlHost.io.reqIn.bits.is_logical.get := io.is_logical.get
-    tlHost.io.reqIn.bits.is_intent.get := io.is_intent.get
+    tlHost.io.reqIn.bits.isArithmetic.get := io.isArithmetic.get
+    tlHost.io.reqIn.bits.isLogical.get := io.isLogical.get
+    tlHost.io.reqIn.bits.isIntent.get := io.isIntent.get
     tlHost.io.reqIn.bits.param.get := io.param.get
     tlHost.io.reqIn.bits.size.get := io.size.get
   }

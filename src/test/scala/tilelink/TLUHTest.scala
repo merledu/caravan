@@ -12,7 +12,7 @@ import scala . util . Random
 import common.MemoryDumpFileHelper // necessary to import
 class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHelper {
     "TL-UH Tests" in {
-        implicit val config = TilelinkConfig(uh = true)
+        implicit val config = TilelinkConfig(uh = true, z = 8)
     // val programFile = getFile
         test(new TilelinkHarness()).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
             val array_op    = Array(2, 3)
@@ -73,9 +73,9 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             c.io.addrReq.poke(0.U)
             c.io.dataReq.poke(data1(index_counter).U)
             if(config.uh){
-                c.io.is_arithmetic.get.poke(false.B)
-                c.io.is_logical.get.poke(false.B)
-                c.io.is_intent.get.poke(false.B)
+                c.io.isArithmetic.get.poke(false.B)
+                c.io.isLogical.get.poke(false.B)
+                c.io.isIntent.get.poke(false.B)
                 c.io.param.get.poke(0.U)
                 c.io.size.get.poke(size_value.U)
                 if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
@@ -113,17 +113,17 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             if(config.uh){
               if (opCode == 2){
                   println("Got the response now try arithmetic operation")
-                  c.io.is_arithmetic.get.poke(true.B)
+                  c.io.isArithmetic.get.poke(true.B)
               }
               else
-                  c.io.is_arithmetic.get.poke(false.B)
+                  c.io.isArithmetic.get.poke(false.B)
               if (opCode == 3){
                   println("Got the response now try logic operation")
-                  c.io.is_logical.get.poke(true.B)
+                  c.io.isLogical.get.poke(true.B)
               }
               else
-                  c.io.is_logical.get.poke(false.B)
-              c.io.is_intent.get.poke(false.B)
+                  c.io.isLogical.get.poke(false.B)
+              c.io.isIntent.get.poke(false.B)
               c.io.param.get.poke(param.U)
               c.io.size.get.poke(size_value.U)
               if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
@@ -162,9 +162,9 @@ class TLUHTest extends FreeSpec with ChiselScalatestTester with MemoryDumpFileHe
             c.io.isWrite.poke(false.B)
             c.io.valid.poke(true.B)
             if(config.uh){
-              c.io.is_arithmetic.get.poke(false.B)
-              c.io.is_logical.get.poke(false.B)
-              c.io.is_intent.get.poke(false.B)
+              c.io.isArithmetic.get.poke(false.B)
+              c.io.isLogical.get.poke(false.B)
+              c.io.isIntent.get.poke(false.B)
               c.io.param.get.poke(0.U)
               c.io.size.get.poke(size_value.U)
               if((math.pow(2,c.io.size.get.peek().litValue.toDouble) > config.w)){
