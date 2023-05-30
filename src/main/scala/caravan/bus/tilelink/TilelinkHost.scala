@@ -12,6 +12,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         val rspOut = Decoupled(new TLResponse())
     })
 
+
     val opReg = RegInit(NoOp.U)
     val paramReg = RegInit(0.U)
     val sizeReg = RegInit(0.U)
@@ -26,7 +27,7 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
     dontTouch(io.reqIn.ready)
     io.tlMasterTransmitter.bits.a_opcode    := 0.U
     io.tlMasterTransmitter.bits.a_data      := 0.U
-    io.tlMasterTransmitter.bits.a_address   := 0.U
+    io.tlMasterTransmitter.bits.a_address   := addReg
     io.tlMasterTransmitter.bits.a_param     := 0.U
     io.tlMasterTransmitter.bits.a_source    := 0.U
     io.tlMasterTransmitter.bits.a_size      := 0.U
@@ -45,7 +46,6 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         paramReg := 0.U
         sizeReg := 0.U
         sourceReg := 0.U
-        addReg := 0.U
         counterHost := 0.U
     }
     
@@ -70,10 +70,12 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
                 io.tlMasterTransmitter.valid            := io.reqIn.valid
                 io.reqIn.ready           := false.B
                 counterHost := counterHost - 1.U
+                io.tlSlaveReceiver.ready := true.B
             }
         .elsewhen(opReg === Get.U){
             counterHost := counterHost - 1.U
             io.reqIn.ready           := false.B
+            io.tlSlaveReceiver.ready := true.B
         }
     }.otherwise{
        
@@ -99,7 +101,6 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
                 paramReg := io.tlMasterTransmitter.bits.a_param
                 sizeReg := io.tlMasterTransmitter.bits.a_size
                 sourceReg := io.tlMasterTransmitter.bits.a_source
-                addReg := io.tlMasterTransmitter.bits.a_address
                 when(io.tlMasterTransmitter.bits.a_opcode === Arithmetic.U || io.tlMasterTransmitter.bits.a_opcode === Logical.U){
                     counterHost := 3.U * ((1.U << io.tlMasterTransmitter.bits.a_size.asUInt)/config.w.U).asUInt - 1.U
                 }
@@ -120,6 +121,8 @@ class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with
         io.tlMasterTransmitter.valid            := io.reqIn.valid
        
         io.reqIn.ready           := false.B
+        io.tlSlaveReceiver.ready := true.B
+        addReg := io.reqIn.bits.addrRequest
     }
     }
     

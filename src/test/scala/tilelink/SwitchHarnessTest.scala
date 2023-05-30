@@ -86,7 +86,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
         c.io.byteLane.poke(byteLane)
         c.io.isWrite.poke(isWrite)
         c.clock.step(1)
-        //c.io.valid.poke(false.B)
+        c.io.valid.poke(false.B)
       }
     }
   }
@@ -115,7 +115,7 @@ class SwitchHarnessTest extends FreeSpec with ChiselScalatestTester with MemoryD
         c.io.byteLane.poke(byteLane)
         c.io.isWrite.poke(isWrite)
         c.clock.step(1)
-        //c.io.valid.poke(false.B)
+        c.io.valid.poke(false.B)
       }
     }
   }

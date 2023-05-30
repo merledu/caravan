@@ -95,20 +95,29 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             when(io.rspIn.valid){
                 io.reqOut.bits.addrRequest := addRegD
                 io.reqOut.bits.dataRequest := MuxCase(io.rspIn.bits.dataResponse,  Array(
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 0.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 1.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data).asUInt,
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 2.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse),
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 3.U) -> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data),
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U && io.tlMasterReceiver.bits.a_param === 4.U) -> (io.tlMasterReceiver.bits.a_data + io.rspIn.bits.dataResponse),
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 0.U) -> (io.tlMasterReceiver.bits.a_data ^ io.rspIn.bits.dataResponse).asUInt,
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 1.U) -> (io.tlMasterReceiver.bits.a_data | io.rspIn.bits.dataResponse).asUInt,
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 2.U) -> (io.tlMasterReceiver.bits.a_data & io.rspIn.bits.dataResponse).asUInt,
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U && io.tlMasterReceiver.bits.a_param === 3.U) -> io.tlMasterReceiver.bits.a_data
+                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 0.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
+
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 1.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data).asUInt,
+
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 2.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse),
+                                                                                                                                                        
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 3.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data),                                     
+                                                                                                                                                        
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 4.U)-> (io.tlMasterReceiver.bits.a_data + io.rspIn.bits.dataResponse)
+                                                                                                                                                        )),
+                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 0.U)-> (io.tlMasterReceiver.bits.a_data ^ io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 1.U)-> (io.tlMasterReceiver.bits.a_data | io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 2.U)-> (io.tlMasterReceiver.bits.a_data & io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 3.U)->  io.tlMasterReceiver.bits.a_data
+                                                                                                                                                ))
                                                                                         ))
+                                                                                    
                 io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask
                 io.reqOut.bits.isWrite := true.B
                 io.reqOut.valid := true.B
