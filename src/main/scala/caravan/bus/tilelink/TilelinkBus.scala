@@ -9,6 +9,11 @@ class TLRequest(implicit val config: TilelinkConfig) extends AbstrRequest {
   override val dataRequest: UInt = UInt((config.w * 8).W)
   override val activeByteLane: UInt = UInt(config.w.W)
   override val isWrite: Bool = Bool()
+  val isArithmetic = if(config.uh) Some(Bool()) else None
+  val isLogical = if(config.uh) Some(Bool()) else None
+  val isIntent = if(config.uh) Some(Bool()) else None 
+  val param = if(config.uh) Some(UInt(3.W)) else None
+  val size = if (config.uh) Some(UInt(config.z.W)) else None
 }
 
 class TLResponse(implicit val config: TilelinkConfig) extends AbstrResponse {

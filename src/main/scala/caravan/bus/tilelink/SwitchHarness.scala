@@ -1,5 +1,5 @@
 package caravan.bus.tilelink
-import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController, Peripherals}
+import caravan.bus.common.{AddressMap, BusDecoder, DeviceAdapter, Switch1toN, DummyMemController,BlockRamWithMasking, Peripherals}
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.ChiselStage
@@ -29,7 +29,7 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   val host = Module(new TilelinkHost())
   val dccmDev = Module(new TilelinkDevice())
   val gpioDev = Module(new TilelinkDevice())
-  val memCtrl = Module(new DummyMemController())
+  val memCtrl = Module(new DummyMemController())//BlockRamWithMasking(new TLRequest(),new TLResponse(),1024))
   val gpioCtrl = Module(new DummyGpioController())
   val tlErr = Module(new TilelinkError())
 
