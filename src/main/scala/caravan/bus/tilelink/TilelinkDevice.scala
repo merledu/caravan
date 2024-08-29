@@ -1,16 +1,20 @@
 package caravan.bus.tilelink
-import caravan.bus.common.DeviceAdapter
+import caravan.bus.common.{DeviceAdapter, DeviceAdapterIO}
 import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util._
 import scala.math._
+
+class TilelinkDeviceIO(implicit val config: TilelinkConfig) extends DeviceAdapterIO
+{
+    val tlSlaveTransmitter      = Decoupled(new TilelinkSlave())
+    val tlMasterReceiver        = Flipped(Decoupled(new TilelinkMaster()))
+    val reqOut                  = Decoupled(new TLRequest())
+    val rspIn                   = Flipped(Decoupled(new TLResponse()))
+}
+
 class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter with OpCodes{
-    val io = IO(new Bundle {
-        val tlSlaveTransmitter = Decoupled(new TilelinkSlave())
-        val tlMasterReceiver = Flipped(Decoupled(new TilelinkMaster()))
-        val reqOut = Decoupled(new TLRequest())
-        val rspIn = Flipped(Decoupled(new TLResponse()))
-    })
+    val io = IO(new TilelinkDeviceIO)
     /*
     NOTICE: This state logic is only for Atomic Operations
     idle          : Address sent to memory to perform READ
