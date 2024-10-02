@@ -31,11 +31,26 @@ class BusDevice extends Bundle
  * of a specific bus protocol will extend (beneficial for switch) */
 abstract class DeviceAdapterIO extends Bundle
 {
-  val reqOut: DecoupledIO[AbstrRequest]
-  val rspIn : DecoupledIO[AbstrResponse]
+  val slaveTransmitter : DecoupledIO[BusDevice]
+  val masterReceiver   : DecoupledIO[BusHost]
+  val reqOut           : DecoupledIO[AbstrRequest]
+  val rspIn            : DecoupledIO[AbstrResponse]
 }
-abstract class DeviceAdapter extends Module
-abstract class HostAdapter extends Module
+
+abstract class HostAdapterIO extends Bundle{
+  val masterTransmitter: DecoupledIO[BusHost]
+  val slaveReceiver    : DecoupledIO[BusDevice]
+  val reqIn            : DecoupledIO[AbstrRequest]
+  val rspOut           : DecoupledIO[AbstrResponse]
+}
+
+abstract class DeviceAdapter extends Module{
+  val io: DeviceAdapterIO
+}
+abstract class HostAdapter extends Module{
+  val io: HostAdapterIO
+  def getAddressPin: UInt
+}
 
 abstract class BusAdapterIO extends Bundle {
   val reqIn : DecoupledIO[AbstrRequest]
@@ -50,3 +65,12 @@ abstract class BusAdapter extends Module{
 // created a trait so that each specific bus protocol
 // can extend from it (beneficial for type paremterization)
 trait BusConfig
+
+abstract class ErrorDeviceIO extends Bundle{
+  val slaveTransmitter: DecoupledIO[BusDevice]
+  val masterReceiver  : DecoupledIO[BusHost]
+}
+
+abstract class ErrorDevice extends Module{
+  val io: ErrorDeviceIO
+}
