@@ -22,10 +22,10 @@ class WishboneAdapter(implicit val config:WishboneConfig) extends BusAdapter {
     val wbSlave = Module(new WishboneDevice)
 
     /*  Connecting Master Interconnects  */
-    wbHost.io.wbMasterTransmitter <> wbSlave.io.wbMasterReceiver
+    wbHost.io.masterTransmitter <> wbSlave.io.masterReceiver
 
     /*  Connecting Slave Interconnects  */
-    wbSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
+    wbSlave.io.slaveTransmitter <> wbHost.io.slaveReceiver
 
     /*  Sending Request in Master  */
     wbHost.io.reqIn <> io.reqIn
