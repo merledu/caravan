@@ -5,7 +5,7 @@ import chisel3.stage.ChiselStage
 import chisel3.util._
 import scala.math._
 
-class TilelinkDeviceIO(implicit val config: TilelinkConfig) extends DeviceAdapterIO
+class TilelinkDeviceIO(implicit val config: TilelinkConfig) extends Bundle
 {
     val tlSlaveTransmitter      = Decoupled(new TilelinkSlave())
     val tlMasterReceiver        = Flipped(Decoupled(new TilelinkMaster()))
@@ -13,7 +13,7 @@ class TilelinkDeviceIO(implicit val config: TilelinkConfig) extends DeviceAdapte
     val rspIn                   = Flipped(Decoupled(new TLResponse()))
 }
 
-class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter with OpCodes{
+class TilelinkDevice(implicit val config: TilelinkConfig) extends Module with OpCodes{
     val io = IO(new TilelinkDeviceIO)
     /*
     NOTICE: This state logic is only for Atomic Operations

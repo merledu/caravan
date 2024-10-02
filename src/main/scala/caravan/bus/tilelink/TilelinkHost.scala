@@ -1,10 +1,10 @@
 package caravan.bus.tilelink
-import caravan.bus.common.HostAdapter
+import caravan.bus.common.{HostAdapter}
 import chisel3._
 import chisel3.experimental.DataMirror
 import chisel3.stage.ChiselStage
 import chisel3.util._
-class TilelinkHost(implicit val config: TilelinkConfig) extends HostAdapter with OpCodes {
+class TilelinkHost(implicit val config: TilelinkConfig) extends Module with OpCodes {
     val io = IO(new Bundle {
         val tlMasterTransmitter = Decoupled(new TilelinkMaster())
         val tlSlaveReceiver  = Flipped(Decoupled(new TilelinkSlave()))
