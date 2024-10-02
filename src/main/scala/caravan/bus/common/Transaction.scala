@@ -37,6 +37,16 @@ abstract class DeviceAdapterIO extends Bundle
 abstract class DeviceAdapter extends Module
 abstract class HostAdapter extends Module
 
+abstract class BusAdapterIO extends Bundle {
+  val reqIn : DecoupledIO[AbstrRequest]
+  val rspOut: DecoupledIO[AbstrResponse]
+  val reqOut: DecoupledIO[AbstrRequest]
+  val rspIn : DecoupledIO[AbstrResponse]
+}
+abstract class BusAdapter extends Module{
+  val io: BusAdapterIO
+}
+
 // created a trait so that each specific bus protocol
 // can extend from it (beneficial for type paremterization)
 trait BusConfig
