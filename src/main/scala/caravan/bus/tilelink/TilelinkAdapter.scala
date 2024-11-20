@@ -3,26 +3,31 @@ package caravan.bus.tilelink
 import chisel3._ 
 import chisel3.util._
 
-class TilelinkAdapter(implicit val config:TilelinkConfig) extends Module {
-    val io = IO(new Bundle{
+import caravan.bus.common._
 
-        /*  MASTER SIDE  */
-        val reqIn =  Flipped(Decoupled(new TLRequest))
-        val rspOut = Decoupled(new TLResponse)
+class TilelinkAdapterIO(implicit val config:TilelinkConfig) extends BusAdapterIO{
 
-        /*  SLAVE SIDE */
-        val reqOut = Decoupled(new TLRequest)
-        val rspIn = Flipped(Decoupled(new TLResponse))
-    })
+    /*  MASTER SIDE  */
+    val reqIn =  Flipped(Decoupled(new TLRequest))
+    val rspOut = Decoupled(new TLResponse)
+
+    /*  SLAVE SIDE */
+    val reqOut = Decoupled(new TLRequest)
+    val rspIn = Flipped(Decoupled(new TLResponse))
+
+}
+
+class TilelinkAdapter(implicit val config:TilelinkConfig) extends BusAdapter {
+    val io = IO(new TilelinkAdapterIO)
 
     val tlHost = Module(new TilelinkHost)
     val tlSlave = Module(new TilelinkDevice)
 
     /*  Connecting Master Interconnects  */
-    tlHost.io.tlMasterTransmitter <> tlSlave.io.tlMasterReceiver
+    tlHost.io.masterTransmitter <> tlSlave.io.masterReceiver
 
     /*  Connecting Slave Interconnects  */
-    tlSlave.io.tlSlaveTransmitter <> tlHost.io.tlSlaveReceiver
+    tlSlave.io.slaveTransmitter <> tlHost.io.slaveReceiver
 
     /*  Sending Request in Master  */
     tlHost.io.reqIn <> io.reqIn
