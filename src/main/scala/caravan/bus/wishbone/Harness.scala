@@ -27,8 +27,8 @@ class WishboneHarness/*(programFile: Option[String])*/(implicit val config: Wish
 
   wbHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
-  wbHost.io.wbMasterTransmitter <> wbSlave.io.wbMasterReceiver
-  wbSlave.io.wbSlaveTransmitter <> wbHost.io.wbSlaveReceiver
+  wbHost.io.masterTransmitter <> wbSlave.io.masterReceiver
+  wbSlave.io.slaveTransmitter <> wbHost.io.slaveReceiver
 
   wbHost.io.reqIn.valid := Mux(wbHost.io.reqIn.ready, io.valid, false.B)
   wbHost.io.reqIn.bits.addrRequest := io.addrReq
@@ -89,18 +89,18 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Wishbo
   host.io.reqIn.bits.activeByteLane := io.byteLane
   host.io.reqIn.bits.isWrite := io.isWrite
 
-  switch.io.hostIn <> host.io.wbMasterTransmitter
-  switch.io.hostOut <> host.io.wbSlaveReceiver
+  switch.io.hostIn <> host.io.masterTransmitter
+  switch.io.hostOut <> host.io.slaveReceiver
 
   for (i <- 0 until devices.size) {
-    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.wbSlaveTransmitter
-    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.wbMasterReceiver
+    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.slaveTransmitter
+    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[WishboneDevice].io.masterReceiver
   }
 
-  switch.io.devOut(devices.size) <> wbErr.io.wbMasterReceiver
-  switch.io.devIn(devices.size) <> wbErr.io.wbSlaveTransmitter
+  switch.io.devOut(devices.size) <> wbErr.io.masterReceiver
+  switch.io.devIn(devices.size) <> wbErr.io.slaveTransmitter
 
-  switch.io.devSel := BusDecoder.decode(host.io.wbMasterTransmitter.bits.adr, addressMap)
+  switch.io.devSel := BusDecoder.decode(host.io.masterTransmitter.bits.adr, addressMap)
   dccmDev.io.reqOut <> memCtrl.io.req
   dccmDev.io.rspIn <> memCtrl.io.rsp
 
