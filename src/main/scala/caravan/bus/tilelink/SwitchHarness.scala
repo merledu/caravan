@@ -49,18 +49,18 @@ class SwitchHarness/*(programFile: Option[String])*/(implicit val config: Tileli
   host.io.reqIn.bits.activeByteLane := io.byteLane
   host.io.reqIn.bits.isWrite := io.isWrite
 
-  switch.io.hostIn <> host.io.tlMasterTransmitter
-  switch.io.hostOut <> host.io.tlSlaveReceiver
+  switch.io.hostIn <> host.io.masterTransmitter
+  switch.io.hostOut <> host.io.slaveReceiver
 
   for (i <- 0 until devices.size) {
-    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[TilelinkDevice].io.tlSlaveTransmitter
-    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[TilelinkDevice].io.tlMasterReceiver
+    switch.io.devIn(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[TilelinkDevice].io.slaveTransmitter
+    switch.io.devOut(devices(i)._2.litValue().toInt) <> devices(i)._1.asInstanceOf[TilelinkDevice].io.masterReceiver
   }
 
-  switch.io.devOut(devices.size) <> tlErr.io.tlMasterReceiver
-  switch.io.devIn(devices.size) <> tlErr.io.tlSlaveTransmitter
+  switch.io.devOut(devices.size) <> tlErr.io.masterReceiver
+  switch.io.devIn(devices.size) <> tlErr.io.slaveTransmitter
 
-  switch.io.devSel := BusDecoder.decode(host.io.tlMasterTransmitter.bits.a_address, addressMap)
+  switch.io.devSel := BusDecoder.decode(host.io.masterTransmitter.bits.a_address, addressMap)
   dccmDev.io.reqOut <> memCtrl.io.req
   dccmDev.io.rspIn <> memCtrl.io.rsp
 
