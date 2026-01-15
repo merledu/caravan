@@ -1,5 +1,7 @@
 package caravan.bus.common
 import chisel3._
+import chisel3.util.DecoupledIO
+
 
 /**
  * This abstract class provides a template for other protocols to implement the transaction wires.
@@ -27,8 +29,51 @@ class BusDevice extends Bundle
 
 /** The HostAdapter and DeviceAdapter is a class from which each host/device adapter
  * of a specific bus protocol will extend (beneficial for switch) */
-abstract class DeviceAdapter extends Module
-abstract class HostAdapter extends Module
+abstract class DeviceAdapterIO extends Bundle
+{
+  val reqOut: DecoupledIO[AbstrRequest]
+  val rspIn : DecoupledIO[AbstrResponse]
+  val slaveTransmitter: DecoupledIO[BusDevice]
+  val masterReceiver: DecoupledIO[BusHost]
+}
+abstract class DeviceAdapter extends Module{
+  val io: DeviceAdapterIO
+}
+
+abstract class HostAdapterIO extends Bundle
+{
+  val reqIn: DecoupledIO[AbstrRequest]
+  val rspOut: DecoupledIO[AbstrResponse]
+  val masterTransmitter: DecoupledIO[BusHost]
+  val slaveReceiver: DecoupledIO[BusDevice]
+}
+
+abstract class HostAdapter extends Module {
+  val io: HostAdapterIO
+
+  def getAddressPin: UInt
+}
+
+abstract class ErrorDeviceIO extends Bundle
+{
+  val slaveTransmitter: DecoupledIO[BusDevice]
+  val masterReceiver: DecoupledIO[BusHost]
+}
+abstract class ErrorDevice extends Module{
+  val io: ErrorDeviceIO
+}
+
+abstract class BusAdapterIO extends Bundle
+{
+  val reqIn: DecoupledIO[AbstrRequest]
+  val rspOut: DecoupledIO[AbstrResponse]
+  val reqOut: DecoupledIO[AbstrRequest]
+  val rspIn: DecoupledIO[AbstrResponse]
+}
+abstract class BusAdapter extends Module
+{
+  val io: BusAdapterIO
+}
 
 // created a trait so that each specific bus protocol
 // can extend from it (beneficial for type paremterization)

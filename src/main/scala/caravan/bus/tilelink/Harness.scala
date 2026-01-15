@@ -35,8 +35,8 @@ class TilelinkHarness/*(programFile: Option[String])*/(implicit val config: Tile
 
   tlHost.io.rspOut.ready := true.B  // IP always ready to accept data from wb host
 
-  tlHost.io.tlMasterTransmitter <> tlSlave.io.tlMasterReceiver
-  tlSlave.io.tlSlaveTransmitter <> tlHost.io.tlSlaveReceiver
+  tlHost.io.masterTransmitter <> tlSlave.io.masterReceiver
+  tlSlave.io.slaveTransmitter <> tlHost.io.slaveReceiver
 
   //tlHost.io.reqIn.valid := Mux(tlHost.io.reqIn.ready, io.valid, false.B)
   tlHost.io.reqIn.valid := io.valid

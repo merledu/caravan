@@ -1,16 +1,20 @@
 package caravan.bus.tilelink
-import caravan.bus.common.DeviceAdapter
+import caravan.bus.common.{DeviceAdapter, DeviceAdapterIO}
 import chisel3._
 import chisel3.stage.ChiselStage
 import chisel3.util._
 import scala.math._
+
+class TilelinkDeviceIO(implicit val config: TilelinkConfig) extends DeviceAdapterIO
+{
+    val slaveTransmitter      = Decoupled(new TilelinkSlave())
+    val masterReceiver        = Flipped(Decoupled(new TilelinkMaster()))
+    val reqOut                  = Decoupled(new TLRequest())
+    val rspIn                   = Flipped(Decoupled(new TLResponse()))
+}
+
 class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter with OpCodes{
-    val io = IO(new Bundle {
-        val tlSlaveTransmitter = Decoupled(new TilelinkSlave())
-        val tlMasterReceiver = Flipped(Decoupled(new TilelinkMaster()))
-        val reqOut = Decoupled(new TLRequest())
-        val rspIn = Flipped(Decoupled(new TLResponse()))
-    })
+    val io = IO(new TilelinkDeviceIO)
     /*
     NOTICE: This state logic is only for Atomic Operations
     idle          : Address sent to memory to perform READ
@@ -26,7 +30,7 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     val counterD = RegInit(UInt(config.z.W),0.U)
     val opRegD = RegInit(NoOp.U)
 
-    io.tlMasterReceiver.ready := true.B
+    io.masterReceiver.ready := true.B
     io.rspIn.ready := false.B
     dontTouch(io.rspIn.ready)
 
@@ -44,20 +48,20 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
     io.reqOut.bits.isWrite          := 0.U
     io.reqOut.valid                 := 0.U
 
-    io.tlSlaveTransmitter.bits.d_opcode     := 0.U
-    io.tlSlaveTransmitter.bits.d_data       := 0.U
-    io.tlSlaveTransmitter.bits.d_param      := 0.U
-    io.tlSlaveTransmitter.bits.d_size       := 0.U
-    io.tlSlaveTransmitter.bits.d_source     := 0.U
-    io.tlSlaveTransmitter.bits.d_sink       := 0.U
-    io.tlSlaveTransmitter.bits.d_denied     := 0.U     // d_denied pin is used for representing Mem error
-    io.tlSlaveTransmitter.bits.d_corrupt    := 0.U
-    io.tlSlaveTransmitter.valid             := 0.U
+    io.slaveTransmitter.bits.d_opcode     := 0.U
+    io.slaveTransmitter.bits.d_data       := 0.U
+    io.slaveTransmitter.bits.d_param      := 0.U
+    io.slaveTransmitter.bits.d_size       := 0.U
+    io.slaveTransmitter.bits.d_source     := 0.U
+    io.slaveTransmitter.bits.d_sink       := 0.U
+    io.slaveTransmitter.bits.d_denied     := 0.U     // d_denied pin is used for representing Mem error
+    io.slaveTransmitter.bits.d_corrupt    := 0.U
+    io.slaveTransmitter.valid             := 0.U
     
 
     when(counterD === 0.U){
-        when(io.tlMasterReceiver.valid){
-            opRegD := io.tlMasterReceiver.bits.a_opcode
+        when(io.masterReceiver.valid){
+            opRegD := io.masterReceiver.bits.a_opcode
         }.otherwise{
             opRegD := NoOp.U
         }
@@ -67,25 +71,25 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
     when(config.uh.asBool() && (opRegD === Arithmetic.U || opRegD === Logical.U )){
        when(stateReg === idle){
-        when(io.tlMasterReceiver.valid){
+        when(io.masterReceiver.valid){
             
             // Address for Atomic operations changes in Tilelink Device during Burst Operations
-            when(counterD > 0.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
+            when(counterD > 0.U && ((1.U << io.masterReceiver.bits.a_size).asUInt() > config.w.U)){
                 io.reqOut.bits.addrRequest := addRegD + config.w.U
                 addRegD := addRegD + config.w.U
                 counterD := counterD - 1.U
             }.otherwise{
-                io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
+                io.reqOut.bits.addrRequest := io.masterReceiver.bits.a_address
             }
-            io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
-            io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask
+            io.reqOut.bits.dataRequest := io.masterReceiver.bits.a_data
+            io.reqOut.bits.activeByteLane := io.masterReceiver.bits.a_mask
             io.reqOut.bits.isWrite := false.B
             io.reqOut.valid := true.B
             io.rspIn.ready := true.B
             stateReg := uh
-            when(counterD === 0.U && ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U)){
-                addRegD := io.tlMasterReceiver.bits.a_address
-                counterD := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt() / config.w.U)- 1.U
+            when(counterD === 0.U && ((1.U << io.masterReceiver.bits.a_size).asUInt() > config.w.U)){
+                addRegD := io.masterReceiver.bits.a_address
+                counterD := ((1.U << io.masterReceiver.bits.a_size).asUInt() / config.w.U)- 1.U
             }
         }
        }
@@ -95,30 +99,30 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             when(io.rspIn.valid){
                 io.reqOut.bits.addrRequest := addRegD
                 io.reqOut.bits.dataRequest := MuxCase(io.rspIn.bits.dataResponse,  Array(
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Arithmetic.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 0.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                         io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
+                                                                                        (io.masterReceiver.bits.a_opcode === Arithmetic.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 0.U)-> Mux(io.masterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.masterReceiver.bits.a_data,io.rspIn.bits.dataResponse).asUInt,
 
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 1.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data).asUInt,
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 1.U)-> Mux(io.masterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.masterReceiver.bits.a_data).asUInt,
 
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 2.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                         io.tlMasterReceiver.bits.a_data,io.rspIn.bits.dataResponse),
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 2.U)-> Mux(io.masterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.masterReceiver.bits.a_data,io.rspIn.bits.dataResponse),
                                                                                                                                                         
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 3.U)-> Mux(io.tlMasterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
-                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.tlMasterReceiver.bits.a_data),                                     
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 3.U)-> Mux(io.masterReceiver.bits.a_data < io.rspIn.bits.dataResponse,
+                                                                                                                                                                                                         io.rspIn.bits.dataResponse,io.masterReceiver.bits.a_data),                                     
                                                                                                                                                         
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 4.U)-> (io.tlMasterReceiver.bits.a_data + io.rspIn.bits.dataResponse)
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 4.U)-> (io.masterReceiver.bits.a_data + io.rspIn.bits.dataResponse)
                                                                                                                                                         )),
-                                                                                        (io.tlMasterReceiver.bits.a_opcode === Logical.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 0.U)-> (io.tlMasterReceiver.bits.a_data ^ io.rspIn.bits.dataResponse).asUInt,
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 1.U)-> (io.tlMasterReceiver.bits.a_data | io.rspIn.bits.dataResponse).asUInt,
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 2.U)-> (io.tlMasterReceiver.bits.a_data & io.rspIn.bits.dataResponse).asUInt,
-                                                                                                                                                        (io.tlMasterReceiver.bits.a_param === 3.U)->  io.tlMasterReceiver.bits.a_data
+                                                                                        (io.masterReceiver.bits.a_opcode === Logical.U) -> MuxCase(io.rspIn.bits.dataResponse,Array(
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 0.U)-> (io.masterReceiver.bits.a_data ^ io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 1.U)-> (io.masterReceiver.bits.a_data | io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 2.U)-> (io.masterReceiver.bits.a_data & io.rspIn.bits.dataResponse).asUInt,
+                                                                                                                                                        (io.masterReceiver.bits.a_param === 3.U)->  io.masterReceiver.bits.a_data
                                                                                                                                                 ))
                                                                                         ))
                                                                                     
-                io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask
+                io.reqOut.bits.activeByteLane := io.masterReceiver.bits.a_mask
                 io.reqOut.bits.isWrite := true.B
                 io.reqOut.valid := true.B
                 rspData := io.rspIn.bits.dataResponse
@@ -133,16 +137,16 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
 
             when(io.rspIn.valid){
                 io.rspIn.ready := false.B
-                io.tlSlaveTransmitter.bits.d_opcode := AccessAckData.U
+                io.slaveTransmitter.bits.d_opcode := AccessAckData.U
                                                                         
-                io.tlSlaveTransmitter.bits.d_data := rspData
-                io.tlSlaveTransmitter.bits.d_param := 0.U
-                io.tlSlaveTransmitter.bits.d_size := io.tlMasterReceiver.bits.a_size
-                io.tlSlaveTransmitter.bits.d_source := io.tlMasterReceiver.bits.a_source
-                io.tlSlaveTransmitter.bits.d_sink := 0.U
-                io.tlSlaveTransmitter.bits.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
-                io.tlSlaveTransmitter.bits.d_corrupt := 0.U
-                io.tlSlaveTransmitter.valid := io.rspIn.valid
+                io.slaveTransmitter.bits.d_data := rspData
+                io.slaveTransmitter.bits.d_param := 0.U
+                io.slaveTransmitter.bits.d_size := io.masterReceiver.bits.a_size
+                io.slaveTransmitter.bits.d_source := io.masterReceiver.bits.a_source
+                io.slaveTransmitter.bits.d_sink := 0.U
+                io.slaveTransmitter.bits.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
+                io.slaveTransmitter.bits.d_corrupt := 0.U
+                io.slaveTransmitter.valid := io.rspIn.valid
 
                 stateReg := idle
 
@@ -161,21 +165,21 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
            
             
         }
-        .elsewhen(io.tlMasterReceiver.valid){
+        .elsewhen(io.masterReceiver.valid){
             
-            io.reqOut.bits.addrRequest := io.tlMasterReceiver.bits.a_address
-            io.reqOut.bits.dataRequest := io.tlMasterReceiver.bits.a_data
-            io.reqOut.bits.activeByteLane := io.tlMasterReceiver.bits.a_mask
-            io.reqOut.bits.isWrite := io.tlMasterReceiver.bits.a_opcode === PutFullData.U || io.tlMasterReceiver.bits.a_opcode === PutPartialData.U
+            io.reqOut.bits.addrRequest := io.masterReceiver.bits.a_address
+            io.reqOut.bits.dataRequest := io.masterReceiver.bits.a_data
+            io.reqOut.bits.activeByteLane := io.masterReceiver.bits.a_mask
+            io.reqOut.bits.isWrite := io.masterReceiver.bits.a_opcode === PutFullData.U || io.masterReceiver.bits.a_opcode === PutPartialData.U
             io.reqOut.valid := true.B
 
             io.rspIn.ready := true.B
 
-            when(((1.U << io.tlMasterReceiver.bits.a_size).asUInt() > config.w.U) && io.tlMasterReceiver.bits.a_opcode === Get.U){
-                opRegD := io.tlMasterReceiver.bits.a_opcode
-                addRegD := io.tlMasterReceiver.bits.a_address
-                maskRegD := io.tlMasterReceiver.bits.a_mask
-                counterD := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt /config.w.U)-1.U 
+            when(((1.U << io.masterReceiver.bits.a_size).asUInt() > config.w.U) && io.masterReceiver.bits.a_opcode === Get.U){
+                opRegD := io.masterReceiver.bits.a_opcode
+                addRegD := io.masterReceiver.bits.a_address
+                maskRegD := io.masterReceiver.bits.a_mask
+                counterD := ((1.U << io.masterReceiver.bits.a_size).asUInt /config.w.U)-1.U 
             }
             
 
@@ -186,34 +190,34 @@ class TilelinkDevice(implicit val config: TilelinkConfig) extends DeviceAdapter 
             io.rspIn.ready := false.B
             counterD := counterD -1.U
 
-            io.tlSlaveTransmitter.bits.d_opcode := 3.U
-            io.tlSlaveTransmitter.bits.d_data := 0.U
-            io.tlSlaveTransmitter.bits.d_param := 0.U
-            io.tlSlaveTransmitter.bits.d_size := 0.U
-            io.tlSlaveTransmitter.bits.d_source := 0.U
-            io.tlSlaveTransmitter.bits.d_sink := 0.U
-            io.tlSlaveTransmitter.bits.d_denied := 0.U      // d_denied pin is used for representing Mem error
-            io.tlSlaveTransmitter.bits.d_corrupt := 0.U
-            io.tlSlaveTransmitter.valid := 0.U
+            io.slaveTransmitter.bits.d_opcode := 3.U
+            io.slaveTransmitter.bits.d_data := 0.U
+            io.slaveTransmitter.bits.d_param := 0.U
+            io.slaveTransmitter.bits.d_size := 0.U
+            io.slaveTransmitter.bits.d_source := 0.U
+            io.slaveTransmitter.bits.d_sink := 0.U
+            io.slaveTransmitter.bits.d_denied := 0.U      // d_denied pin is used for representing Mem error
+            io.slaveTransmitter.bits.d_corrupt := 0.U
+            io.slaveTransmitter.valid := 0.U
         }
         .elsewhen(io.rspIn.valid){
 
-            when(io.tlMasterReceiver.bits.a_opcode === Get.U){
-                io.tlSlaveTransmitter.bits.d_opcode := AccessAck.U
+            when(io.masterReceiver.bits.a_opcode === Get.U){
+                io.slaveTransmitter.bits.d_opcode := AccessAck.U
             }.otherwise{
-                io.tlSlaveTransmitter.bits.d_opcode := AccessAckData.U}
-                io.tlSlaveTransmitter.bits.d_data := io.rspIn.bits.dataResponse
-                io.tlSlaveTransmitter.bits.d_param := 0.U
-                io.tlSlaveTransmitter.bits.d_size := io.tlMasterReceiver.bits.a_size
-                io.tlSlaveTransmitter.bits.d_source := io.tlMasterReceiver.bits.a_source
-                io.tlSlaveTransmitter.bits.d_sink := 0.U
-                io.tlSlaveTransmitter.bits.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
-                io.tlSlaveTransmitter.bits.d_corrupt := 0.U
-                io.tlSlaveTransmitter.valid := io.rspIn.valid
+                io.slaveTransmitter.bits.d_opcode := AccessAckData.U}
+                io.slaveTransmitter.bits.d_data := io.rspIn.bits.dataResponse
+                io.slaveTransmitter.bits.d_param := 0.U
+                io.slaveTransmitter.bits.d_size := io.masterReceiver.bits.a_size
+                io.slaveTransmitter.bits.d_source := io.masterReceiver.bits.a_source
+                io.slaveTransmitter.bits.d_sink := 0.U
+                io.slaveTransmitter.bits.d_denied := io.rspIn.bits.error      // d_denied pin is used for representing Mem error
+                io.slaveTransmitter.bits.d_corrupt := 0.U
+                io.slaveTransmitter.valid := io.rspIn.valid
 
-            when(((1.U << io.tlMasterReceiver.bits.a_size).asUInt > config.w.U) && io.tlMasterReceiver.bits.a_opcode =/= Get.U){
-                counterD := ((1.U << io.tlMasterReceiver.bits.a_size).asUInt /config.w.U)-1.U
-                opRegD := io.tlMasterReceiver.bits.a_opcode
+            when(((1.U << io.masterReceiver.bits.a_size).asUInt > config.w.U) && io.masterReceiver.bits.a_opcode =/= Get.U){
+                counterD := ((1.U << io.masterReceiver.bits.a_size).asUInt /config.w.U)-1.U
+                opRegD := io.masterReceiver.bits.a_opcode
             }
             io.rspIn.ready := false.B
 
